@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Venda - ORION PDV</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row flex-nowrap">
+            <!-- Sidebar (mesmo código do index.html) -->
+            <!-- ... incluir sidebar aqui ... -->
+            
+            <!-- Conteúdo Principal -->
+            <div class="col py-3">
+                <div class="container">
+                    <h1 class="mb-4">
+                        <i class="bi bi-receipt"></i> Registrar Venda
+                    </h1>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs" id="vendaTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="busca-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#busca" type="button" role="tab" 
+                                            aria-controls="busca" aria-selected="true">
+                                        Buscar Produto
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="scanner-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#scanner" type="button" role="tab" 
+                                            aria-controls="scanner" aria-selected="false">
+                                        Scanner de Código de Barras
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="vendaTabsContent">
+                                <!-- Tab Buscar Produto -->
+                                <div class="tab-pane fade show active" id="busca" role="tabpanel" aria-labelledby="busca-tab">
+                                    <div class="mb-3">
+                                        <label for="termoBusca" class="form-label">Digite o nome ou código do produto:</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="termoBusca">
+                                            <button class="btn btn-primary" type="button" id="btnBuscar">
+                                                <i class="bi bi-search"></i> Buscar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="resultadosBusca" class="row"></div>
+                                </div>
+                                
+                                <!-- Tab Scanner -->
+                                <div class="tab-pane fade" id="scanner" role="tabpanel" aria-labelledby="scanner-tab">
+                                    <div class="alert alert-info">
+                                        <h5>Scanner de Código de Barras Assistido</h5>
+                                        <p>Para escanear um código de barras, você tem duas opções:</p>
+                                        <ol>
+                                            <li><strong>Via celular:</strong> Use Google Lens ou aplicativo de scanner, depois digite o código detectado</li>
+                                            <li><strong>Via caixa de texto:</strong> Cole texto com números e extraia o código automaticamente</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <div class="mb-3">
+                                                <label for="codigoBarras" class="form-label">Digite o código de barras:</label>
+                                                <input type="text" class="form-control" id="codigoBarras">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <img src="https://www.qr-code-generator.com/wp-content/themes/qr/images/barcode-generator-free.jpg" 
+                                                 alt="Exemplo de código de barras" width="100" class="mt-2">
+                                            <p><small>Exemplo</small></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="btn btn-primary" id="btnUsarCodigo">
+                                        <i class="bi bi-upc-scan"></i> Usar Código
+                                    </button>
+                                    
+                                    <div class="mt-3">
+                                        <h5>Extrair de Texto</h5>
+                                        <div class="mb-3">
+                                            <label for="textoOCR" class="form-label">Cole o texto obtido pelo OCR:</label>
+                                            <textarea class="form-control" id="textoOCR" rows="3" 
+                                                      placeholder="Cole aqui o texto que contém os números do código de barras..."></textarea>
+                                        </div>
+                                        <button class="btn btn-primary" id="btnExtrairCodigo">
+                                            <i class="bi bi-scissors"></i> Extrair Código de Barras
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="resultadoScanner" class="mt-3"></div>
+                                    
+                                    <div class="mt-4">
+                                        <a class="btn btn-link" data-bs-toggle="collapse" href="#instrucoes" 
+                                           role="button" aria-expanded="false" aria-controls="instrucoes">
+                                            Como escanear códigos com seu celular
+                                        </a>
+                                        <div class="collapse" id="instrucoes">
+                                            <div class="card card-body">
+                                                <h5>📱 Como utilizar aplicativos de scanner</h5>
+                                                <p>Para escanear códigos de barras com seu celular:</p>
+                                                <ol>
+                                                    <li><strong>Google Lens</strong> - Aponte para o código, tire uma foto e veja os números detectados</li>
+                                                    <li><strong>Aplicativo de Câmera</strong> - Muitos celulares já detectam códigos automaticamente</li>
+                                                    <li><strong>Aplicativos específicos</strong> - Há vários aplicativos gratuitos para escanear códigos</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Carrinho de Compras -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>
+                                <i class="bi bi-cart"></i> Carrinho de Compras
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="carrinhoVazio" class="alert alert-info">
+                                Carrinho vazio. Adicione produtos utilizando a busca ou scanner.
+                            </div>
+                            
+                            <div id="itensCarrinho"></div>
+                            
+                            <div class="d-flex justify-content-end mt-3">
+                                <h4>Total: <span id="totalVenda">R$ 0,00</span></h4>
+                            </div>
+                            
+                            <hr>
+                            
+                            <!-- Formulário de Finalização -->
+                            <form id="formFinalizarVenda">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="cliente" class="form-label">Cliente</label>
+                                        <select class="form-select" id="cliente" required>
+                                            <option value="Consumidor Final" selected>Consumidor Final</option>
+                                            <!-- Preenchido dinamicamente -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="formaPgto" class="form-label">Forma de Pagamento</label>
+                                        <select class="form-select" id="formaPgto" required>
+                                            <!-- Preenchido dinamicamente -->
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success btn-lg" id="btnFinalizarVenda" disabled>
+                                        <i class="bi bi-check-circle"></i> Finalizar Venda
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal para Recibo -->
+                    <div class="modal fade" id="reciboModal" tabindex="-1" aria-labelledby="reciboModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="reciboModalLabel">Recibo da Venda</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="conteudoRecibo"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                    <button type="button" class="btn btn-primary" id="btnImprimirRecibo">
+                                        <i class="bi bi-printer"></i> Imprimir
+                                    </button>
+                                    <button type="button" class="btn btn-success" id="btnDownloadRecibo">
+                                        <i class="bi bi-download"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/venda.js"></script>
+</body>
+</html>
