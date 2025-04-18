@@ -409,4 +409,166 @@
           // Caso não tenha vendas
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td colspan="6" style="text-align: center;">Nenhuma venda regist
+       <!-- Continuação do dashboard.html -->
+            <td colspan="6" style="text-align: center;">Nenhuma venda registrada</td>
+          `;
+          tbody.appendChild(tr);
+        }
+        
+        // Adicionar eventos aos botões de visualização
+        document.querySelectorAll('.btn-view-venda').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            // Redirecionar para página de detalhes da venda
+            window.location.href = `relatorio.html?venda=${id}`;
+          });
+        });
+      }
+      
+      function carregarProdutosEstoqueBaixo() {
+        const produtos = db.getProdutos();
+        const tbody = document.querySelector('#tabela-estoque-baixo tbody');
+        
+        // Limpar tabela
+        tbody.innerHTML = '';
+        
+        // Filtrar produtos com estoque baixo
+        const produtosBaixoEstoque = Object.values(produtos).filter(produto => {
+          return produto.estoque <= (produto.estoque_minimo || 10);
+        });
+        
+        // Ordenar por estoque (menor primeiro)
+        produtosBaixoEstoque.sort((a, b) => a.estoque - b.estoque);
+        
+        // Limitar aos 5 primeiros
+        const produtosExibir = produtosBaixoEstoque.slice(0, 5);
+        
+        // Adicionar linhas
+        if (produtosExibir.length > 0) {
+          produtosExibir.forEach(produto => {
+            const tr = document.createElement('tr');
+            
+            tr.innerHTML = `
+              <td>${produto.nome}</td>
+              <td>${produto.codigo_barras}</td>
+              <td>
+                <span class="${produto.estoque === 0 ? 'text-danger' : 'text-warning'}">
+                  ${produto.estoque}
+                </span>
+              </td>
+              <td>${produto.estoque_minimo || 10}</td>
+              <td>
+                <button class="btn btn-outline-primary btn-sm btn-add-estoque" data-id="${produto.id}">
+                  <i class="fas fa-plus"></i> Adicionar
+                  <!-- Continuação do dashboard.html -->
+                <button class="btn btn-outline-primary btn-sm btn-add-estoque" data-id="${produto.id}">
+                  <i class="fas fa-plus"></i> Adicionar
+                </button>
+              </td>
+            `;
+            
+            tbody.appendChild(tr);
+          });
+        } else {
+          // Caso não tenha produtos com estoque baixo
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td colspan="5" style="text-align: center;">Não há produtos com estoque baixo</td>
+          `;
+          tbody.appendChild(tr);
+        }
+        
+        // Adicionar eventos aos botões de adicionar estoque
+        document.querySelectorAll('.btn-add-estoque').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const produto = db.getProduto(id);
+            
+            if (produto) {
+              // Abrir modal para adição de estoque
+              abrirModalAdicionarEstoque(produto);
+            }
+          });
+        });
+      }
+      
+      // Modal para adicionar estoque
+      function abrirModalAdicionarEstoque(produto) {
+        // Criar elemento do modal
+        const modalEl = document.createElement('div');
+        modalEl.className = 'modal';
+        modalEl.style.display = 'flex';
+        modalEl.style.position = 'fixed';
+        modalEl.style.top = '0';
+        modalEl.style.left = '0';
+        modalEl.style.width = '100%';
+        modalEl.style.height = '100%';
+        modalEl.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        modalEl.style.justifyContent = 'center';
+        modalEl.style.alignItems = 'center';
+        modalEl.style.zIndex = '1000';
+        
+        // Conteúdo do modal
+        modalEl.innerHTML = `
+          <div class="modal-content" style="background-color: var(--dark-surface); width: 400px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <h3>Adicionar Estoque</h3>
+              <button type="button" class="btn-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background-color: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius);">
+                  <i class="fas fa-box" style="font-size: 2rem; color: var(--primary);"></i>
+                </div>
+                <div style="flex: 1;">
+                  <h4>${produto.nome}</h4>
+                  <p style="margin: 0; color: var(--text-muted);">Código: ${produto.codigo_barras}</p>
+                  <p style="margin: 0; color: var(--text-muted);">Estoque atual: ${produto.estoque}</p>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="quantidade" class="form-label">Quantidade a adicionar</label>
+                <input type="number" id="quantidade" class="form-control" value="1" min="1" step="1">
+              </div>
+              
+              <div class="form-group" style="margin-top: 1.5rem;">
+                <button type="button" id="btn-confirmar-estoque" class="btn btn-primary" style="width: 100%;">Confirmar</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Adicionar modal ao body
+        document.body.appendChild(modalEl);
+        
+        // Fechar modal
+        modalEl.querySelector('.btn-close').addEventListener('click', function() {
+          document.body.removeChild(modalEl);
+        });
+        
+        // Confirmar adição de estoque
+        modalEl.querySelector('#btn-confirmar-estoque').addEventListener('click', function() {
+          const quantidade = parseInt(modalEl.querySelector('#quantidade').value);
+          
+          if (quantidade > 0) {
+            // Atualizar estoque
+            db.atualizarEstoqueProduto(produto.id, quantidade);
+            
+            // Exibir mensagem de sucesso
+            alert(`Estoque atualizado com sucesso! Novo estoque: ${produto.estoque + quantidade}`);
+            
+            // Fechar modal
+            document.body.removeChild(modalEl);
+            
+            // Recarregar dados
+            carregarProdutosEstoqueBaixo();
+          } else {
+            alert('Por favor, informe uma quantidade válida');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
