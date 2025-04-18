@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Estoque - ORION PDV</title>
+  <link rel="stylesheet" href="assets/css/orion-theme.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+    .table th, .table td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+    .pagination button { margin: 0 3px; padding: 0.3rem 0.6rem; border: none; cursor: pointer; }
+    .pagination .active { background-color: #007bff; color: white; }
+  </style>
+</head>
+<body>
+  <main class="content">
+    <h1>Estoque de Produtos</h1>
+    <table id="tabelaEstoque" class="table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nome</th>
+          <th>Grupo</th>
+          <th>Marca</th>
+          <th>Preço</th>
+          <th>Estoque</th>
+          <th>Mínimo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="paginacaoEstoque" class="pagination"></div>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const tabela = document.getElementById("tabelaEstoque").querySelector("tbody");
+      const paginacao = document.getElementById("paginacaoEstoque");
+      const linhasPorPagina = 10;
+      let paginaAtual = 1;
+
+      const produtos = Object.values(JSON.parse(localStorage.getItem("orion_produtos") || "{}"));
+
+      function renderizarTabela() {
+        tabela.innerHTML = "";
+        const inicio = (paginaAtual - 1) * linhasPorPagina;
+        const fim = inicio + linhasPorPagina;
+        const pagina = produtos.slice(inicio, fim);
+
+        for (let p of pagina) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${p.codigo_barras}</td>
+            <td>${p.nome}</td>
+            <td>${p.grupo}</td>
+            <td>${p.marca}</td>
+            <td>R$ ${p.preco.toFixed(2)}</td>
+            <td>${p.estoque}</td>
+            <td>${p.estoque_minimo}</td>
+          `;
+          tabela.appendChild(tr);
+        }
+      }
+
+      function renderizarPaginacao() {
+        paginacao.innerHTML = "";
+        const totalPaginas = Math.ceil(produtos.length / linhasPorPagina);
+        for (let i = 1; i <= totalPaginas; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          if (i === paginaAtual) btn.classList.add("active");
+          btn.addEventListener("click", () => {
+            paginaAtual = i;
+            renderizarTabela();
+            renderizarPaginacao();
+          });
+          paginacao.appendChild(btn);
+        }
+      }
+
+      renderizarTabela();
+      renderizarPaginacao();
+    });
+  </script>
+</body>
+</html>
