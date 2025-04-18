@@ -1,252 +1,229 @@
-// assets/js/auth.js - Atualizado para usar IndexedDB
+// assets/js/auth.js
 class OrionAuth {
-  constructor() {
-    this.usuarioAtual = null;
-    this.dbName = 'orionAuthDB';
-    this.dbVersion = 1;
-    this.storeName = 'usuarios';
-    this.initDatabase();
-    this.verificarAutenticacao();
-  }
+    constructor() {
+        this.SESSION_KEY = 'orion_session';
+        this.SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 horas em milissegundos
+    }
 
-  initDatabase() {
-    const request = indexedDB.open(this.dbName, this.dbVersion);
-    
-    request.onerror = (event) => {
-      console.error('Erro ao abrir banco de dados:', event.target.error);
-    };
-    
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains(this.storeName)) {
-        const store = db.createObjectStore(this.storeName, { keyPath: 'email' });
-        store.createIndex('email', 'email', { unique: true });
-      }
-    };
-  }
-
-  verificarAutenticacao() {
-    // Verificar se existe um usuário na sessão
-    const usuarioSalvo = sessionStorage.getItem('orion_usuario_atual');
-    if (usuarioSalvo) {
-      try {
-        this.usuarioAtual = JSON.parse(usuarioSalvo);
-        // Verificar validade da sessão (8 horas)
-        const agora = new Date().getTime();
-        const ultimoLogin = new Date(this.usuarioAtual.timestamp).getTime();
-        const horasAtivas = (agora - ultimoLogin) / (1000 * 60 * 60);
-        if (horasAtivas > 8) {
-          console.log('Sessão expirada');
-          this.fazerLogout();
-          return false;
+    // Login de usuário
+    login(username, password) {
+        // Verificar se os dados foram fornecidos
+        if (!username || !password) {
+            return {
+                sucesso: false,
+                mensagem: 'Usuário e senha são obrigatórios'
+            };
         }
+
+        // Obter usuário do banco de dados
+        const db = window.db; // Sistema de banco de dados
+        const usuario = db.getUsuario(username);
+
+        // Verificar se o usuário existe
+        if (!usuario) {
+            return {
+                sucesso: false,
+                mensagem: 'Usuário não encontrado'
+            };
+        }
+
+        // Fazer hash da senha
+        const senhaHash = db.hashPassword(password);
+
+        // Verificar se a senha está correta
+        if (senhaHash !== usuario.senha_hash) {
+            return {
+                sucesso: false,
+                mensagem: 'Senha incorreta'
+            };
+        }
+
+        // Criar sessão
+        const session = {
+            username: usuario.username,
+            nome: usuario.nome,
+            perfil: usuario.perfil,
+            ultimo_acesso: new Date().toISOString(),
+            expira_em: new Date(Date.now() + this.SESSION_DURATION).toISOString()
+        };
+
+        // Salvar sessão no localStorage
+        localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+
+        // Atualizar último acesso do usuário
+        usuario.ultimo_acesso = session.ultimo_acesso;
+        db.adicionarUsuario(usuario);
+
+        return {
+            sucesso: true,
+            usuario: {
+                username: usuario.username,
+                nome: usuario.nome,
+                perfil: usuario.perfil
+            }
+        };
+    }
+
+    // Verificar se o usuário está autenticado
+    verificarAutenticacao() {
+        // Obter dados da sessão
+        const sessionData = localStorage.getItem(this.SESSION_KEY);
+        
+        if (!sessionData) {
+            return false;
+        }
+
+        try {
+            // Converter dados da sessão para objeto
+            const session = JSON.parse(sessionData);
+
+            // Verificar se a sessão expirou
+            const agora = new Date();
+            const expiraEm = new Date(session.expira_em);
+
+            if (agora > expiraEm) {
+                // Sessão expirada, remover dados
+                this.fazerLogout();
+                return false;
+            }
+
+            // Renovar sessão
+            this.renovarSessao();
+
+            return true;
+        } catch (error) {
+            console.error('Erro ao verificar autenticação:', error);
+            return false;
+        }
+    }
+
+    // Obter dados do usuário atual
+    getUsuarioAtual() {
+        // Verificar se está autenticado
+        if (!this.verificarAutenticacao()) {
+            return null;
+        }
+
+        // Obter dados da sessão
+        const sessionData = localStorage.getItem(this.SESSION_KEY);
+        
+        if (!sessionData) {
+            return null;
+        }
+
+        try {
+            // Converter dados da sessão para objeto
+            const session = JSON.parse(sessionData);
+
+            return {
+                username: session.username,
+                nome: session.nome,
+                perfil: session.perfil
+            };
+        } catch (error) {
+            console.error('Erro ao obter usuário atual:', error);
+            return null;
+        }
+    }
+
+    // Renovar sessão
+    renovarSessao() {
+        // Obter dados da sessão
+        const sessionData = localStorage.getItem(this.SESSION_KEY);
+        
+        if (!sessionData) {
+            return false;
+        }
+
+        try {
+            // Converter dados da sessão para objeto
+            const session = JSON.parse(sessionData);
+
+            // Atualizar data de expiração
+            session.expira_em = new Date(Date.now() + this.SESSION_DURATION).toISOString();
+
+            // Salvar sessão atualizada
+            localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+
+            return true;
+        } catch (error) {
+            console.error('Erro ao renovar sessão:', error);
+            return false;
+        }
+    }
+
+    // Fazer logout
+    fazerLogout() {
+        localStorage.removeItem(this.SESSION_KEY);
         return true;
-      } catch (error) {
-        console.error('Erro ao processar dados do usuário:', error);
-        this.fazerLogout();
+    }
+
+    // Verificar se usuário tem uma permissão específica
+    verificarPermissao(permissao) {
+        // Obter usuário atual
+        const usuario = this.getUsuarioAtual();
+
+        if (!usuario) {
+            return false;
+        }
+
+        // Verificar se é administrador (tem todas as permissões)
+        if (usuario.perfil === 'admin') {
+            return true;
+        }
+
+        // Implementar verificação de permissões específicas conforme necessário
+        // Exemplo: buscar permissões por perfil em um objeto ou banco de dados
+
         return false;
-      }
     }
-    return false;
-  }
 
-  fazerLogin(email, senha) {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName);
-      
-      request.onerror = (event) => {
-        reject('Erro ao acessar o banco de dados: ' + event.target.error);
-      };
-      
-      request.onsuccess = (event) => {
-        const db = event.target.result;
-        const transaction = db.transaction([this.storeName], 'readonly');
-        const store = transaction.objectStore(this.storeName);
-        const getRequest = store.get(email);
-        
-        getRequest.onsuccess = (event) => {
-          const usuario = event.target.result;
-          if (usuario && usuario.senha === this.hashSenha(senha)) {
-            // Atualizar timestamp de login
-            usuario.timestamp = new Date().toISOString();
-            this.usuarioAtual = usuario;
-            
-            // Salvar na sessão
-            sessionStorage.setItem('orion_usuario_atual', JSON.stringify(usuario));
-            
-            // Atualizar último login no IndexedDB
-            const updateTransaction = db.transaction([this.storeName], 'readwrite');
-            const updateStore = updateTransaction.objectStore(this.storeName);
-            updateStore.put(usuario);
-            
-            resolve(usuario);
-          } else {
-            reject('Credenciais inválidas');
-          }
+    // Alterar senha do usuário
+    alterarSenha(username, senhaAtual, novaSenha) {
+        // Verificar se os dados foram fornecidos
+        if (!username || !senhaAtual || !novaSenha) {
+            return {
+                sucesso: false,
+                mensagem: 'Todos os campos são obrigatórios'
+            };
+        }
+
+        // Obter usuário do banco de dados
+        const db = window.db;
+        const usuario = db.getUsuario(username);
+
+        // Verificar se o usuário existe
+        if (!usuario) {
+            return {
+                sucesso: false,
+                mensagem: 'Usuário não encontrado'
+            };
+        }
+
+        // Fazer hash da senha atual
+        const senhaAtualHash = db.hashPassword(senhaAtual);
+
+        // Verificar se a senha atual está correta
+        if (senhaAtualHash !== usuario.senha_hash) {
+            return {
+                sucesso: false,
+                mensagem: 'Senha atual incorreta'
+            };
+        }
+
+        // Fazer hash da nova senha
+        const novaSenhaHash = db.hashPassword(novaSenha);
+
+        // Atualizar senha do usuário
+        usuario.senha_hash = novaSenhaHash;
+        db.adicionarUsuario(usuario);
+
+        return {
+            sucesso: true,
+            mensagem: 'Senha alterada com sucesso'
         };
-        
-        getRequest.onerror = (event) => {
-          reject('Erro ao buscar usuário: ' + event.target.error);
-        };
-      };
-    });
-  }
-
-  cadastrarUsuario(usuario) {
-    return new Promise((resolve, reject) => {
-      if (!usuario.email || !usuario.senha || !usuario.nome) {
-        reject('Dados incompletos');
-        return;
-      }
-      
-      // Hash da senha antes de armazenar
-      usuario.senha = this.hashSenha(usuario.senha);
-      usuario.timestamp = new Date().toISOString();
-      
-      const request = indexedDB.open(this.dbName);
-      
-      request.onerror = (event) => {
-        reject('Erro ao acessar o banco de dados: ' + event.target.error);
-      };
-      
-      request.onsuccess = (event) => {
-        const db = event.target.result;
-        const transaction = db.transaction([this.storeName], 'readwrite');
-        const store = transaction.objectStore(this.storeName);
-        
-        const getRequest = store.get(usuario.email);
-        getRequest.onsuccess = (event) => {
-          if (event.target.result) {
-            reject('Usuário já existe');
-            return;
-          }
-          
-          const addRequest = store.add(usuario);
-          
-          addRequest.onsuccess = () => {
-            resolve(usuario);
-          };
-          
-          addRequest.onerror = (event) => {
-            reject('Erro ao cadastrar usuário: ' + event.target.error);
-          };
-        };
-      };
-    });
-  }
-
-  fazerLogout() {
-    this.usuarioAtual = null;
-    sessionStorage.removeItem('orion_usuario_atual');
-  }
-
-  getUsuarioAtual() {
-    return this.usuarioAtual;
-  }
-
-  atualizarUsuario(dadosAtualizados) {
-    return new Promise((resolve, reject) => {
-      if (!this.usuarioAtual) {
-        reject('Nenhum usuário logado');
-        return;
-      }
-      
-      const request = indexedDB.open(this.dbName);
-      
-      request.onerror = (event) => {
-        reject('Erro ao acessar o banco de dados: ' + event.target.error);
-      };
-      
-      request.onsuccess = (event) => {
-        const db = event.target.result;
-        const transaction = db.transaction([this.storeName], 'readwrite');
-        const store = transaction.objectStore(this.storeName);
-        
-        const getRequest = store.get(this.usuarioAtual.email);
-        
-        getRequest.onsuccess = (event) => {
-          const usuario = event.target.result;
-          if (!usuario) {
-            reject('Usuário não encontrado');
-            return;
-          }
-          
-          // Atualizar dados do usuário
-          const usuarioAtualizado = {...usuario, ...dadosAtualizados};
-          
-          // Se a senha foi alterada, aplicar hash
-          if (dadosAtualizados.senha) {
-            usuarioAtualizado.senha = this.hashSenha(dadosAtualizados.senha);
-          }
-          
-          const updateRequest = store.put(usuarioAtualizado);
-          
-          updateRequest.onsuccess = () => {
-            // Atualizar usuário atual e sessão
-            this.usuarioAtual = usuarioAtualizado;
-            sessionStorage.setItem('orion_usuario_atual', JSON.stringify(usuarioAtualizado));
-            resolve(usuarioAtualizado);
-          };
-          
-          updateRequest.onerror = (event) => {
-            reject('Erro ao atualizar usuário: ' + event.target.error);
-          };
-        };
-      };
-    });
-  }
-
-  hashSenha(senha) {
-    // Implementação simples de hash (em produção, usar bcrypt ou similar)
-    // Nota: Este é apenas um placeholder. Para produção, use métodos mais seguros.
-    let hash = 0;
-    for (let i = 0; i < senha.length; i++) {
-      const char = senha.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Converter para 32bit integer
     }
-    return hash.toString(16);
-  }
-
-  redefinirSenha(email, novaSenha) {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName);
-      
-      request.onerror = (event) => {
-        reject('Erro ao acessar o banco de dados: ' + event.target.error);
-      };
-      
-      request.onsuccess = (event) => {
-        const db = event.target.result;
-        const transaction = db.transaction([this.storeName], 'readwrite');
-        const store = transaction.objectStore(this.storeName);
-        
-        const getRequest = store.get(email);
-        
-        getRequest.onsuccess = (event) => {
-          const usuario = event.target.result;
-          if (!usuario) {
-            reject('Usuário não encontrado');
-            return;
-          }
-          
-          usuario.senha = this.hashSenha(novaSenha);
-          usuario.timestamp = new Date().toISOString();
-          
-          const updateRequest = store.put(usuario);
-          
-          updateRequest.onsuccess = () => {
-            resolve(true);
-          };
-          
-          updateRequest.onerror = (event) => {
-            reject('Erro ao atualizar senha: ' + event.target.error);
-          };
-        };
-      };
-    });
-  }
 }
 
-// Exportar instância global
-const orionAuth = new OrionAuth();
+// Inicialização global
+const auth = new OrionAuth();
