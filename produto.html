@@ -156,28 +156,28 @@
               </div>
               
               <div class="form-group">
-                <label for="grupo" class="form-label">Grupo</label>
-                <div style="display: flex; gap: 0.5rem;">
-                  <select id="grupo" class="form-control" required>
-                    <!-- Preenchido via JavaScript -->
-                  </select>
-                  <button type="button" id="btn-novo-grupo" class="btn btn-outline-primary" title="Novo Grupo">
-                    <i class="fas fa-plus"></i>
-                  </button>
-                </div>
-              </div>
+  <label for="grupo" class="form-label">Grupo</label>
+  <div style="display: flex; gap: 0.5rem;">
+    <select id="grupo" class="form-control" required>
+      <!-- Preenchido via JavaScript -->
+    </select>
+    <button type="button" id="btn-novo-grupo" class="btn btn-outline-primary" title="Novo Grupo">
+      <i class="fas fa-plus"></i>
+    </button>
+  </div>
+</div>
               
               <div class="form-group">
-                <label for="marca" class="form-label">Marca</label>
-                <div style="display: flex; gap: 0.5rem;">
-                  <select id="marca" class="form-control">
-                    <!-- Preenchido via JavaScript -->
-                  </select>
-                  <button type="button" id="btn-nova-marca" class="btn btn-outline-primary" title="Nova Marca">
-                    <i class="fas fa-plus"></i>
-                  </button>
-                </div>
-              </div>
+  <label for="marca" class="form-label">Marca</label>
+  <div style="display: flex; gap: 0.5rem;">
+    <select id="marca" class="form-control">
+      <!-- Preenchido via JavaScript -->
+    </select>
+    <button type="button" id="btn-nova-marca" class="btn btn-outline-primary" title="Nova Marca">
+      <i class="fas fa-plus"></i>
+    </button>
+  </div>
+</div>
               
               <div class="form-group">
                 <label for="preco" class="form-label">Preço de Venda (R$)</label>
@@ -692,104 +692,83 @@
     });
   </script>
 
+
+  
+
+
 <script>
-function adicionarGrupo() {
-  const novoGrupo = prompt("Digite o nome do novo grupo:");
-  if (novoGrupo) {
-    let grupos = JSON.parse(localStorage.getItem('grupos') || "[]");
+document.addEventListener("DOMContentLoaded", function () {
+  const grupoSelect = document.getElementById("grupo");
+  const marcaSelect = document.getElementById("marca");
 
-    if (!grupos.includes(novoGrupo)) {
-      grupos.push(novoGrupo);
-      localStorage.setItem('grupos', JSON.stringify(grupos));
-      renderizarGrupos();
-    } else {
-      alert("Grupo já existe!");
-    }
+  const btnNovoGrupo = document.getElementById("btn-novo-grupo");
+  const btnNovaMarca = document.getElementById("btn-nova-marca");
+
+  function salvarLista(chave, lista) {
+    localStorage.setItem(chave, JSON.stringify(lista));
   }
-}
 
-function renderizarGrupos() {
-  const grupoSelect = document.getElementById('grupoSelect');
-  let grupos = JSON.parse(localStorage.getItem('grupos') || "[]");
-
-  grupoSelect.innerHTML = "<option disabled selected>Selecione</option>";
-  grupos.forEach(grupo => {
-    const opt = document.createElement("option");
-    opt.value = grupo;
-    opt.textContent = grupo;
-    grupoSelect.appendChild(opt);
-  });
-}
-
-document.getElementById("addGrupoBtn").addEventListener("click", adicionarGrupo);
-
-window.addEventListener("DOMContentLoaded", () => {
-  renderizarGrupos();
-});
-</script>
-  <script>
-function adicionarGrupo() {
-  const novoGrupo = prompt("Digite o nome do novo grupo:");
-  if (novoGrupo) {
-    let grupos = JSON.parse(localStorage.getItem('grupos') || "[]");
-    if (!grupos.includes(novoGrupo)) {
-      grupos.push(novoGrupo);
-      localStorage.setItem('grupos', JSON.stringify(grupos));
-      renderizarGrupos();
-    } else {
-      alert("Grupo já existe!");
-    }
+  function carregarLista(chave) {
+    return JSON.parse(localStorage.getItem(chave) || "[]");
   }
-}
 
-function adicionarMarca() {
-  const novaMarca = prompt("Digite o nome da nova marca:");
-  if (novaMarca) {
-    let marcas = JSON.parse(localStorage.getItem('marcas') || "[]");
-    if (!marcas.includes(novaMarca)) {
-      marcas.push(novaMarca);
-      localStorage.setItem('marcas', JSON.stringify(marcas));
-      renderizarMarcas();
-    } else {
-      alert("Marca já existe!");
-    }
+  function renderizarGrupos() {
+    const grupos = carregarLista("grupos");
+    grupoSelect.innerHTML = "";
+    grupos.forEach(grupo => {
+      const opt = document.createElement("option");
+      opt.value = grupo;
+      opt.textContent = grupo;
+      grupoSelect.appendChild(opt);
+    });
   }
-}
 
-function renderizarGrupos() {
-  const grupoSelect = document.getElementById('grupoSelect');
-  if (!grupoSelect) return;
-  let grupos = JSON.parse(localStorage.getItem('grupos') || "[]");
-  grupoSelect.innerHTML = "<option disabled selected>Selecione</option>";
-  grupos.forEach(grupo => {
-    const opt = document.createElement("option");
-    opt.value = grupo;
-    opt.textContent = grupo;
-    grupoSelect.appendChild(opt);
+  function renderizarMarcas() {
+    const marcas = carregarLista("marcas");
+    marcaSelect.innerHTML = "";
+    marcas.forEach(marca => {
+      const opt = document.createElement("option");
+      opt.value = marca;
+      opt.textContent = marca;
+      marcaSelect.appendChild(opt);
+    });
+  }
+
+  btnNovoGrupo.addEventListener("click", () => {
+    const novoGrupo = prompt("Digite o nome do novo grupo:");
+    if (novoGrupo) {
+      const grupos = carregarLista("grupos");
+      if (!grupos.includes(novoGrupo)) {
+        grupos.push(novoGrupo);
+        salvarLista("grupos", grupos);
+        renderizarGrupos();
+        grupoSelect.value = novoGrupo;
+      } else {
+        alert("Grupo já existe.");
+      }
+    }
   });
-}
 
-function renderizarMarcas() {
-  const marcaSelect = document.getElementById('marcaSelect');
-  if (!marcaSelect) return;
-  let marcas = JSON.parse(localStorage.getItem('marcas') || "[]");
-  marcaSelect.innerHTML = "<option disabled selected>Selecione</option>";
-  marcas.forEach(marca => {
-    const opt = document.createElement("option");
-    opt.value = marca;
-    opt.textContent = marca;
-    marcaSelect.appendChild(opt);
+  btnNovaMarca.addEventListener("click", () => {
+    const novaMarca = prompt("Digite o nome da nova marca:");
+    if (novaMarca) {
+      const marcas = carregarLista("marcas");
+      if (!marcas.includes(novaMarca)) {
+        marcas.push(novaMarca);
+        salvarLista("marcas", marcas);
+        renderizarMarcas();
+        marcaSelect.value = novaMarca;
+      } else {
+        alert("Marca já existe.");
+      }
+    }
   });
-}
 
-window.addEventListener("DOMContentLoaded", () => {
   renderizarGrupos();
   renderizarMarcas();
-  document.getElementById("addGrupoBtn")?.addEventListener("click", adicionarGrupo);
-  document.getElementById("addMarcaBtn")?.addEventListener("click", adicionarMarca);
 });
 </script>
-
 </body>
+
 
 </html>
