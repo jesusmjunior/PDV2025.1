@@ -102,5 +102,95 @@
       criarPaginacao();
     });
   </script>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("form-produto");
+    const grupoSelect = document.getElementById("grupo");
+    const marcaSelect = document.getElementById("marca");
+    const btnNovoGrupo = document.getElementById("btn-novo-grupo");
+    const btnNovaMarca = document.getElementById("btn-nova-marca");
+
+    function carregarGrupos() {
+      const grupos = JSON.parse(localStorage.getItem("orion_grupos") || "[]");
+      grupoSelect.innerHTML = "";
+      grupos.forEach(g => {
+        const opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        grupoSelect.appendChild(opt);
+      });
+    }
+
+    function carregarMarcas() {
+      const marcas = JSON.parse(localStorage.getItem("orion_marcas") || "[]");
+      marcaSelect.innerHTML = "";
+      marcas.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        marcaSelect.appendChild(opt);
+      });
+    }
+
+    btnNovoGrupo.addEventListener("click", () => {
+      const novo = prompt("Digite o novo grupo:");
+      if (novo) {
+        let grupos = JSON.parse(localStorage.getItem("orion_grupos") || "[]");
+        if (!grupos.includes(novo)) {
+          grupos.push(novo);
+          localStorage.setItem("orion_grupos", JSON.stringify(grupos));
+          carregarGrupos();
+          grupoSelect.value = novo;
+        } else {
+          alert("Grupo já existe.");
+        }
+      }
+    });
+
+    btnNovaMarca.addEventListener("click", () => {
+      const novo = prompt("Digite a nova marca:");
+      if (novo) {
+        let marcas = JSON.parse(localStorage.getItem("orion_marcas") || "[]");
+        if (!marcas.includes(novo)) {
+          marcas.push(novo);
+          localStorage.setItem("orion_marcas", JSON.stringify(marcas));
+          carregarMarcas();
+          marcaSelect.value = novo;
+        } else {
+          alert("Marca já existe.");
+        }
+      }
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const produto = {
+        id: Date.now().toString(),
+        codigo_barras: document.getElementById("codigo-barras").value,
+        nome: document.getElementById("nome").value,
+        grupo: grupoSelect.value,
+        marca: marcaSelect.value,
+        preco: parseFloat(document.getElementById("preco").value),
+        estoque: parseInt(document.getElementById("estoque").value),
+        estoque_minimo: parseInt(document.getElementById("estoque-minimo").value),
+        foto: document.getElementById("foto").value
+      };
+
+      let produtos = JSON.parse(localStorage.getItem("orion_produtos") || "{}");
+      produtos[produto.id] = produto;
+      localStorage.setItem("orion_produtos", JSON.stringify(produtos));
+
+      alert("✅ Produto adicionado ao estoque com sucesso!");
+      form.reset();
+    });
+
+    carregarGrupos();
+    carregarMarcas();
+  });
+</script>
+</body>
+</html>
+
 </body>
 </html>
