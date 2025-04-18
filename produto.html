@@ -915,4 +915,77 @@
               <div style="display: flex; gap: 0.5rem;">
                 <div class="form-group" style="margin-bottom: 0;">
                   <select id="filtro-grupo" class="form-control" style="width: 150px;">
-                    <option value="">Todos os
+                    // Verificar se já existe
+              if (grupos.includes(novoItem)) {
+                exibirMensagem('Este grupo já existe', 'warning');
+                return;
+              }
+              
+              // Adicionar novo grupo
+              db.adicionarGrupo(novoItem);
+              
+              // Recarregar grupos
+              carregarGrupos();
+              
+              // Selecionar o novo grupo no formulário
+              grupoSelect.value = novoItem;
+            } else {
+              // Obter marcas atuais
+              const marcas = db.getMarcas();
+              
+              // Verificar se já existe
+              if (marcas.includes(novoItem)) {
+                exibirMensagem('Esta marca já existe', 'warning');
+                return;
+              }
+              
+              // Adicionar nova marca
+              db.adicionarMarca(novoItem);
+              
+              // Recarregar marcas
+              carregarMarcas();
+              
+              // Selecionar a nova marca no formulário
+              marcaSelect.value = novoItem;
+            }
+            
+            // Fechar modal
+            modalAdicionar.style.display = 'none';
+            
+            // Exibir mensagem de sucesso
+            exibirMensagem(`${tipoModal === 'grupo' ? 'Grupo' : 'Marca'} adicionado com sucesso`, 'success');
+          } catch (erro) {
+            exibirMensagem(`Erro ao adicionar ${tipoModal}: ${erro}`, 'error');
+          }
+        }
+      }
+      
+      // Função para exibir mensagens toast
+      function exibirMensagem(mensagem, tipo = 'info') {
+        // Criar elemento toast
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${tipo}`;
+        toast.innerHTML = mensagem;
+        
+        // Adicionar ao corpo do documento
+        document.body.appendChild(toast);
+        
+        // Exibir toast
+        setTimeout(() => {
+          toast.classList.add('show');
+        }, 10);
+        
+        // Remover toast após 3 segundos
+        setTimeout(() => {
+          toast.classList.remove('show');
+          
+          // Remover do DOM após a animação
+          setTimeout(() => {
+            document.body.removeChild(toast);
+          }, 300);
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>
