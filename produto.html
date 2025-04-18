@@ -1,187 +1,105 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cadastro de Produtos - ORION PDV</title>
+  <title>Estoque - ORION PDV</title>
   <link rel="stylesheet" href="assets/css/orion-theme.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    .table th, .table td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    .pagination {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      padding: 0.4rem 0.7rem;
+      border: none;
+      background: #eee;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .pagination button.active {
+      background: #007bff;
+      color: white;
+    }
+  </style>
 </head>
 <body>
-  <div class="wrapper">
-    <aside class="sidebar">
-      <div class="logo">
-        <img src="assets/img/logo.png" alt="ORION PDV">
-        <span class="logo-text">ORION PDV</span>
-      </div>
-      <ul class="nav-menu">
-        <li><a href="dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-        <li><a href="venda.html" class="nav-link"><i class="fas fa-shopping-cart"></i> Registrar Venda</a></li>
-        <li><a href="produto.html" class="nav-link active"><i class="fas fa-box"></i> Cadastrar Produto</a></li>
-        <li><a href="cliente.html" class="nav-link"><i class="fas fa-user"></i> Cadastrar Cliente</a></li>
-        <li><a href="relatorio.html" class="nav-link"><i class="fas fa-chart-bar"></i> Painel Financeiro</a></li>
-        <li><a href="estoque.html" class="nav-link"><i class="fas fa-warehouse"></i> Gerenciar Estoque</a></li>
-        <li><a href="config.html" class="nav-link"><i class="fas fa-cog"></i> Configurações</a></li>
-      </ul>
-    </aside>
+  <main>
+    <h1>📦 Estoque de Produtos</h1>
+    <table id="tabelaEstoque" class="table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nome</th>
+          <th>Grupo</th>
+          <th>Marca</th>
+          <th>Preço</th>
+          <th>Estoque</th>
+          <th>Mínimo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-    <main class="content">
-      <h1>Cadastro de Produtos</h1>
-      <form id="form-produto" style="max-width: 600px; margin-top: 2rem">
-        <input type="hidden" id="produto-id" />
+    <div id="paginacaoEstoque" class="pagination"></div>
+  </main>
 
-        <div class="form-group">
-          <label for="codigo-barras">Código de Barras</label>
-          <input type="text" id="codigo-barras" class="form-control" required />
-        </div>
-
-        <div class="form-group">
-          <label for="nome">Nome do Produto</label>
-          <input type="text" id="nome" class="form-control" required />
-        </div>
-
-        <div class="form-group">
-          <label for="grupo">Grupo</label>
-          <div style="display: flex; gap: 0.5rem;">
-            <select id="grupo" class="form-control" required></select>
-            <button type="button" id="btn-novo-grupo" class="btn btn-outline-primary"><i class="fas fa-plus"></i></button>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="marca">Marca</label>
-          <div style="display: flex; gap: 0.5rem;">
-            <select id="marca" class="form-control"></select>
-            <button type="button" id="btn-nova-marca" class="btn btn-outline-primary"><i class="fas fa-plus"></i></button>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="preco">Preço de Venda (R$)</label>
-          <input type="number" id="preco" class="form-control" step="0.01" required />
-        </div>
-
-        <div class="form-group">
-          <label for="estoque">Estoque Atual</label>
-          <input type="number" id="estoque" class="form-control" required />
-        </div>
-
-        <div class="form-group">
-          <label for="estoque-minimo">Estoque Mínimo</label>
-          <input type="number" id="estoque-minimo" class="form-control" required />
-        </div>
-
-        <div class="form-group">
-          <label for="foto">URL da Imagem (opcional)</label>
-          <input type="text" id="foto" class="form-control" />
-        </div>
-
-        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-          <button type="submit" class="btn btn-primary">Salvar</button>
-          <button type="reset" class="btn btn-outline-secondary">Cancelar</button>
-        </div>
-      </form>
-    </main>
-
-  <script src="assets/js/database.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const formProduto = document.getElementById("form-produto");
-      const grupoSelect = document.getElementById("grupo");
-      const marcaSelect = document.getElementById("marca");
-      const btnNovoGrupo = document.getElementById("btn-novo-grupo");
-      const btnNovaMarca = document.getElementById("btn-nova-marca");
+    document.addEventListener("DOMContentLoaded", function () {
+      const tbody = document.querySelector("#tabelaEstoque tbody");
+      const paginacao = document.getElementById("paginacaoEstoque");
+      const produtos = Object.values(JSON.parse(localStorage.getItem("orion_produtos") || "{}"));
+      const porPagina = 10;
+      let paginaAtual = 1;
 
-      const codigoInput = document.getElementById("codigo-barras");
-      const nomeInput = document.getElementById("nome");
-      const precoInput = document.getElementById("preco");
-      const estoqueInput = document.getElementById("estoque");
-      const estoqueMinimoInput = document.getElementById("estoque-minimo");
-      const fotoInput = document.getElementById("foto");
-      const idInput = document.getElementById("produto-id");
-
-      function carregarGrupos() {
-        grupoSelect.innerHTML = "";
-        const grupos = db.getGrupos();
-        grupos.forEach(g => {
-          const opt = document.createElement("option");
-          opt.value = g;
-          opt.textContent = g;
-          grupoSelect.appendChild(opt);
-        });
+      function exibirTabela() {
+        tbody.innerHTML = "";
+        const inicio = (paginaAtual - 1) * porPagina;
+        const fim = inicio + porPagina;
+        const page = produtos.slice(inicio, fim);
+        for (let p of page) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${p.codigo_barras}</td>
+            <td>${p.nome}</td>
+            <td>${p.grupo}</td>
+            <td>${p.marca}</td>
+            <td>R$ ${p.preco.toFixed(2)}</td>
+            <td>${p.estoque}</td>
+            <td>${p.estoque_minimo}</td>
+          `;
+          tbody.appendChild(tr);
+        }
       }
 
-      function carregarMarcas() {
-        marcaSelect.innerHTML = "";
-        const marcas = db.getMarcas();
-        marcas.forEach(m => {
-          const opt = document.createElement("option");
-          opt.value = m;
-          opt.textContent = m;
-          marcaSelect.appendChild(opt);
-        });
+      function criarPaginacao() {
+        paginacao.innerHTML = "";
+        const totalPaginas = Math.ceil(produtos.length / porPagina);
+        for (let i = 1; i <= totalPaginas; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          if (i === paginaAtual) btn.classList.add("active");
+          btn.addEventListener("click", () => {
+            paginaAtual = i;
+            exibirTabela();
+            criarPaginacao();
+          });
+          paginacao.appendChild(btn);
+        }
       }
 
-      btnNovoGrupo.addEventListener("click", () => {
-        const novo = prompt("Digite o nome do novo grupo:");
-        if (novo) {
-          const grupos = db.getGrupos();
-          if (!grupos.includes(novo)) {
-            grupos.push(novo);
-            localStorage.setItem("orion_grupos", JSON.stringify(grupos));
-            carregarGrupos();
-            grupoSelect.value = novo;
-          } else {
-            alert("Grupo já existe!");
-          }
-        }
-      });
-
-      btnNovaMarca.addEventListener("click", () => {
-        const novo = prompt("Digite o nome da nova marca:");
-        if (novo) {
-          const marcas = db.getMarcas();
-          if (!marcas.includes(novo)) {
-            marcas.push(novo);
-            localStorage.setItem("orion_marcas", JSON.stringify(marcas));
-            carregarMarcas();
-            marcaSelect.value = novo;
-          } else {
-            alert("Marca já existe!");
-          }
-        }
-      });
-
-      formProduto.addEventListener("submit", (e) => {
-        e.preventDefault();
-
-        const produto = {
-          id: idInput.value || null,
-          codigo_barras: codigoInput.value,
-          nome: nomeInput.value,
-          grupo: grupoSelect.value,
-          marca: marcaSelect.value,
-          preco: parseFloat(precoInput.value),
-          estoque: parseInt(estoqueInput.value),
-          estoque_minimo: parseInt(estoqueMinimoInput.value),
-          foto: fotoInput.value
-        };
-
-        try {
-          db.salvarProduto(produto);
-          alert("Produto salvo com sucesso!");
-          formProduto.reset();
-          carregarGrupos();
-          carregarMarcas();
-        } catch (erro) {
-          alert("Erro ao salvar produto: " + erro.message);
-        }
-      });
-
-      carregarGrupos();
-      carregarMarcas();
+      exibirTabela();
+      criarPaginacao();
     });
   </script>
 </body>
