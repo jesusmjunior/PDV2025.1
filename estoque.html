@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -8,15 +7,35 @@
   <link rel="stylesheet" href="assets/css/orion-theme.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    .table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
-    .table th, .table td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
-    .pagination button { margin: 0 3px; padding: 0.3rem 0.6rem; border: none; cursor: pointer; }
-    .pagination .active { background-color: #007bff; color: white; }
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    .table th, .table td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    .pagination {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      padding: 0.4rem 0.7rem;
+      border: none;
+      background: #eee;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .pagination button.active {
+      background: #007bff;
+      color: white;
+    }
   </style>
 </head>
 <body>
-  <main class="content">
-    <h1>Estoque de Produtos</h1>
+  <main>
+    <h1>📦 Estoque de Produtos</h1>
     <table id="tabelaEstoque" class="table">
       <thead>
         <tr>
@@ -31,25 +50,24 @@
       </thead>
       <tbody></tbody>
     </table>
+
     <div id="paginacaoEstoque" class="pagination"></div>
   </main>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const tabela = document.getElementById("tabelaEstoque").querySelector("tbody");
+      const tbody = document.querySelector("#tabelaEstoque tbody");
       const paginacao = document.getElementById("paginacaoEstoque");
-      const linhasPorPagina = 10;
+      const produtos = Object.values(JSON.parse(localStorage.getItem("orion_produtos") || "{}"));
+      const porPagina = 10;
       let paginaAtual = 1;
 
-      const produtos = Object.values(JSON.parse(localStorage.getItem("orion_produtos") || "{}"));
-
-      function renderizarTabela() {
-        tabela.innerHTML = "";
-        const inicio = (paginaAtual - 1) * linhasPorPagina;
-        const fim = inicio + linhasPorPagina;
-        const pagina = produtos.slice(inicio, fim);
-
-        for (let p of pagina) {
+      function exibirTabela() {
+        tbody.innerHTML = "";
+        const inicio = (paginaAtual - 1) * porPagina;
+        const fim = inicio + porPagina;
+        const page = produtos.slice(inicio, fim);
+        for (let p of page) {
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td>${p.codigo_barras}</td>
@@ -60,28 +78,28 @@
             <td>${p.estoque}</td>
             <td>${p.estoque_minimo}</td>
           `;
-          tabela.appendChild(tr);
+          tbody.appendChild(tr);
         }
       }
 
-      function renderizarPaginacao() {
+      function criarPaginacao() {
         paginacao.innerHTML = "";
-        const totalPaginas = Math.ceil(produtos.length / linhasPorPagina);
+        const totalPaginas = Math.ceil(produtos.length / porPagina);
         for (let i = 1; i <= totalPaginas; i++) {
           const btn = document.createElement("button");
           btn.textContent = i;
           if (i === paginaAtual) btn.classList.add("active");
           btn.addEventListener("click", () => {
             paginaAtual = i;
-            renderizarTabela();
-            renderizarPaginacao();
+            exibirTabela();
+            criarPaginacao();
           });
           paginacao.appendChild(btn);
         }
       }
 
-      renderizarTabela();
-      renderizarPaginacao();
+      exibirTabela();
+      criarPaginacao();
     });
   </script>
 </body>
