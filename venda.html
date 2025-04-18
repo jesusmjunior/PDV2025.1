@@ -1,206 +1,275 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Venda - ORION PDV</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar Venda - ORION PDV</title>
+  <link rel="stylesheet" href="assets/css/orion-theme.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <style>
+    .produto-card {
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+    
+    .produto-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--box-shadow);
+      border-color: var(--primary);
+    }
+    
+    .produto-img {
+      height: 140px;
+      width: 100%;
+      background-color: var(--dark-lighter);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .produto-img img {
+      max-height: 120px;
+      max-width: 90%;
+      object-fit: contain;
+    }
+    
+    .produto-info {
+      padding: 0.75rem;
+    }
+    
+    .produto-preco {
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+    
+    .produto-estoque {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    
+    .carrinho-item {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.75rem 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .carrinho-img {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .carrinho-img img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    
+    .carrinho-info {
+      flex: 1;
+    }
+    
+    .carrinho-nome {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    
+    .carrinho-detalhes {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+  </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row flex-nowrap">
-            <!-- Sidebar (mesmo código do index.html) -->
-            <!-- ... incluir sidebar aqui ... -->
-            
-            <!-- Conteúdo Principal -->
-            <div class="col py-3">
-                <div class="container">
-                    <h1 class="mb-4">
-                        <i class="bi bi-receipt"></i> Registrar Venda
-                    </h1>
-                    
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <ul class="nav nav-tabs card-header-tabs" id="vendaTabs" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="busca-tab" data-bs-toggle="tab" 
-                                            data-bs-target="#busca" type="button" role="tab" 
-                                            aria-controls="busca" aria-selected="true">
-                                        Buscar Produto
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="scanner-tab" data-bs-toggle="tab" 
-                                            data-bs-target="#scanner" type="button" role="tab" 
-                                            aria-controls="scanner" aria-selected="false">
-                                        Scanner de Código de Barras
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="card-body">
-                            <div class="tab-content" id="vendaTabsContent">
-                                <!-- Tab Buscar Produto -->
-                                <div class="tab-pane fade show active" id="busca" role="tabpanel" aria-labelledby="busca-tab">
-                                    <div class="mb-3">
-                                        <label for="termoBusca" class="form-label">Digite o nome ou código do produto:</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="termoBusca">
-                                            <button class="btn btn-primary" type="button" id="btnBuscar">
-                                                <i class="bi bi-search"></i> Buscar
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div id="resultadosBusca" class="row"></div>
-                                </div>
-                                
-                                <!-- Tab Scanner -->
-                                <div class="tab-pane fade" id="scanner" role="tabpanel" aria-labelledby="scanner-tab">
-                                    <div class="alert alert-info">
-                                        <h5>Scanner de Código de Barras Assistido</h5>
-                                        <p>Para escanear um código de barras, você tem duas opções:</p>
-                                        <ol>
-                                            <li><strong>Via celular:</strong> Use Google Lens ou aplicativo de scanner, depois digite o código detectado</li>
-                                            <li><strong>Via caixa de texto:</strong> Cole texto com números e extraia o código automaticamente</li>
-                                        </ol>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-9">
-                                            <div class="mb-3">
-                                                <label for="codigoBarras" class="form-label">Digite o código de barras:</label>
-                                                <input type="text" class="form-control" id="codigoBarras">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 text-center">
-                                            <img src="https://www.qr-code-generator.com/wp-content/themes/qr/images/barcode-generator-free.jpg" 
-                                                 alt="Exemplo de código de barras" width="100" class="mt-2">
-                                            <p><small>Exemplo</small></p>
-                                        </div>
-                                    </div>
-                                    
-                                    <button class="btn btn-primary" id="btnUsarCodigo">
-                                        <i class="bi bi-upc-scan"></i> Usar Código
-                                    </button>
-                                    
-                                    <div class="mt-3">
-                                        <h5>Extrair de Texto</h5>
-                                        <div class="mb-3">
-                                            <label for="textoOCR" class="form-label">Cole o texto obtido pelo OCR:</label>
-                                            <textarea class="form-control" id="textoOCR" rows="3" 
-                                                      placeholder="Cole aqui o texto que contém os números do código de barras..."></textarea>
-                                        </div>
-                                        <button class="btn btn-primary" id="btnExtrairCodigo">
-                                            <i class="bi bi-scissors"></i> Extrair Código de Barras
-                                        </button>
-                                    </div>
-                                    
-                                    <div id="resultadoScanner" class="mt-3"></div>
-                                    
-                                    <div class="mt-4">
-                                        <a class="btn btn-link" data-bs-toggle="collapse" href="#instrucoes" 
-                                           role="button" aria-expanded="false" aria-controls="instrucoes">
-                                            Como escanear códigos com seu celular
-                                        </a>
-                                        <div class="collapse" id="instrucoes">
-                                            <div class="card card-body">
-                                                <h5>📱 Como utilizar aplicativos de scanner</h5>
-                                                <p>Para escanear códigos de barras com seu celular:</p>
-                                                <ol>
-                                                    <li><strong>Google Lens</strong> - Aponte para o código, tire uma foto e veja os números detectados</li>
-                                                    <li><strong>Aplicativo de Câmera</strong> - Muitos celulares já detectam códigos automaticamente</li>
-                                                    <li><strong>Aplicativos específicos</strong> - Há vários aplicativos gratuitos para escanear códigos</li>
-                                                </ol>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Carrinho de Compras -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>
-                                <i class="bi bi-cart"></i> Carrinho de Compras
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="carrinhoVazio" class="alert alert-info">
-                                Carrinho vazio. Adicione produtos utilizando a busca ou scanner.
-                            </div>
-                            
-                            <div id="itensCarrinho"></div>
-                            
-                            <div class="d-flex justify-content-end mt-3">
-                                <h4>Total: <span id="totalVenda">R$ 0,00</span></h4>
-                            </div>
-                            
-                            <hr>
-                            
-                            <!-- Formulário de Finalização -->
-                            <form id="formFinalizarVenda">
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="cliente" class="form-label">Cliente</label>
-                                        <select class="form-select" id="cliente" required>
-                                            <option value="Consumidor Final" selected>Consumidor Final</option>
-                                            <!-- Preenchido dinamicamente -->
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="formaPgto" class="form-label">Forma de Pagamento</label>
-                                        <select class="form-select" id="formaPgto" required>
-                                            <!-- Preenchido dinamicamente -->
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-success btn-lg" id="btnFinalizarVenda" disabled>
-                                        <i class="bi bi-check-circle"></i> Finalizar Venda
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    
-                    <!-- Modal para Recibo -->
-                    <div class="modal fade" id="reciboModal" tabindex="-1" aria-labelledby="reciboModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="reciboModalLabel">Recibo da Venda</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div id="conteudoRecibo"></div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                    <button type="button" class="btn btn-primary" id="btnImprimirRecibo">
-                                        <i class="bi bi-printer"></i> Imprimir
-                                    </button>
-                                    <button type="button" class="btn btn-success" id="btnDownloadRecibo">
-                                        <i class="bi bi-download"></i> Download
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div class="wrapper">
+    <!-- Sidebar (igual ao dashboard.html) -->
+    <!-- ... incluir sidebar aqui ... -->
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/database.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/venda.js"></script>
+    <!-- Conteúdo principal -->
+    <main class="content">
+      <div class="header" style="margin-bottom: 1.5rem;">
+        <h1>Registrar Venda</h1>
+        <div>
+          <span id="current-date"></span>
+        </div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 400px; gap: 1.5rem;">
+        <!-- Painel de Produtos -->
+        <div class="card" style="height: calc(100vh - 130px); overflow: hidden; display: flex; flex-direction: column;">
+          <div class="card-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <i class="fas fa-box"></i> Produtos
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <select id="filtro-grupo" class="form-control" style="width: 150px;">
+                    <option value="">Todos os Grupos</option>
+                    <!-- Preenchido via JavaScript -->
+                  </select>
+                </div>
+                <div style="position: relative;">
+                  <input type="text" id="busca-produto" class="form-control" placeholder="Buscar produto..." style="width: 200px; padding-left: 36px;">
+                  <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-body" style="overflow-y: auto; flex: 1;">
+            <!-- Tabs de busca -->
+            <ul class="nav nav-tabs" style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+              <li class="nav-item">
+                <a class="nav-link active" id="tab-produtos" href="#" style="color: var(--text-light); border: none; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">
+                  Produtos
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="tab-scanner" href="#" style="color: var(--text-muted); border: none; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">
+                  Scanner de Código
+                </a>
+              </li>
+            </ul>
+            
+            <!-- Conteúdo das tabs -->
+            <div id="conteudo-tabs">
+              <!-- Tab Produtos -->
+              <div id="tab-conteudo-produtos" class="tab-content active">
+                <div id="lista-produtos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                  <!-- Preenchido via JavaScript -->
+                </div>
+              </div>
+              
+              <!-- Tab Scanner -->
+              <div id="tab-conteudo-scanner" class="tab-content" style="display: none;">
+                <div class="alert" style="background-color: rgba(30, 136, 229, 0.1); border: 1px solid rgba(30, 136, 229, 0.3); color: var(--primary); border-radius: var(--border-radius); padding: 1rem; margin-bottom: 1rem;">
+                  <h4 style="margin-top: 0;"><i class="fas fa-info-circle"></i> Como usar o scanner</h4>
+                  <p style="margin-bottom: 0;">Para escanear códigos de barras, você pode:</p>
+                  <ol style="margin-bottom: 0;">
+                    <li>Digitar o código de barras no campo abaixo</li>
+                    <li>Usar um leitor de código de barras conectado ao computador</li>
+                    <li>Usar a câmera do celular para escanear o código e digitar o resultado</li>
+                  </ol>
+                </div>
+                
+                <div class="form-group">
+                  <label for="codigo-barras" class="form-label">Código de Barras</label>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="codigo-barras" class="form-control">
+                    <button id="btn-buscar-codigo" class="btn btn-primary">
+                      <i class="fas fa-search"></i> Buscar
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="resultado-scanner" style="margin-top: 1.5rem;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Carrinho de Compras -->
+        <div class="card" style="height: calc(100vh - 130px); overflow: hidden; display: flex; flex-direction: column;">
+          <div class="card-header">
+            <i class="fas fa-shopping-cart"></i> Carrinho
+          </div>
+          
+          <div id="carrinho-conteudo" style="flex: 1; display: flex; flex-direction: column;">
+            <div id="carrinho-itens" style="flex: 1; overflow-y: auto; padding: 1rem;">
+              <div id="carrinho-vazio" style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+                <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>Carrinho vazio</p>
+                <p style="font-size: 0.9rem;">Adicione produtos para iniciar a venda</p>
+              </div>
+              
+              <!-- Lista de itens do carrinho (preenchido via JavaScript) -->
+            </div>
+            
+            <!-- Rodapé do carrinho -->
+            <div style="padding: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+              <!-- Subtotal -->
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Subtotal</span>
+                <span id="subtotal">R$ 0,00</span>
+              </div>
+              
+              <!-- Desconto -->
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Desconto</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <input type="number" id="desconto" class="form-control" value="0" min="0" step="0.01" style="width: 80px; text-align: right;">
+                  <span>%</span>
+                </div>
+              </div>
+              
+              <!-- Total -->
+              <div style="display: flex; justify-content: space-between; margin: 1rem 0; font-size: 1.25rem; font-weight: 600;">
+                <span>Total</span>
+                <span id="total" style="color: var(--primary);">R$ 0,00</span>
+              </div>
+              
+              <!-- Formulário de Finalização -->
+              <div class="form-group">
+                <label for="cliente" class="form-label">Cliente</label>
+                <select id="cliente" class="form-control">
+                  <option value="1">Consumidor Final</option>
+                  <!-- Preenchido via JavaScript -->
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="forma-pagamento" class="form-label">Forma de Pagamento</label>
+                <select id="forma-pagamento" class="form-control">
+                  <!-- Preenchido via JavaScript -->
+                </select>
+              </div>
+              
+              <button id="btn-finalizar" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" disabled>
+                <i class="fas fa-check-circle"></i> Finalizar Venda
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modal de Recibo -->
+      <div id="modal-recibo" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background-color: var(--dark-surface); width: 600px; max-width: 90%; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Recibo da Venda</h3>
+            <button type="button" class="btn-close-recibo" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+          </div>
+          <div class="card-body">
+            <div id="recibo-conteudo" style="max-height: 70vh; overflow-y: auto;"></div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
+              <button id="btn-imprimir" class="btn btn-outline-primary">
+                <i class="fas fa-print"></i> Imprimir
+              </button>
+              <button id="btn-nova-venda" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Nova Venda
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/database.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/vendas.js"></script>
 </body>
 </html>
