@@ -691,5 +691,42 @@
       }
     });
   </script>
+
+<script>
+function adicionarGrupo() {
+  const novoGrupo = prompt("Digite o nome do novo grupo:");
+  if (novoGrupo) {
+    let grupos = JSON.parse(localStorage.getItem('grupos') || "[]");
+
+    if (!grupos.includes(novoGrupo)) {
+      grupos.push(novoGrupo);
+      localStorage.setItem('grupos', JSON.stringify(grupos));
+      renderizarGrupos();
+    } else {
+      alert("Grupo já existe!");
+    }
+  }
+}
+
+function renderizarGrupos() {
+  const grupoSelect = document.getElementById('grupoSelect');
+  let grupos = JSON.parse(localStorage.getItem('grupos') || "[]");
+
+  grupoSelect.innerHTML = "<option disabled selected>Selecione</option>";
+  grupos.forEach(grupo => {
+    const opt = document.createElement("option");
+    opt.value = grupo;
+    opt.textContent = grupo;
+    grupoSelect.appendChild(opt);
+  });
+}
+
+document.getElementById("addGrupoBtn").addEventListener("click", adicionarGrupo);
+
+window.addEventListener("DOMContentLoaded", () => {
+  renderizarGrupos();
+});
+</script>
 </body>
+
 </html>
