@@ -727,6 +727,69 @@ window.addEventListener("DOMContentLoaded", () => {
   renderizarGrupos();
 });
 </script>
+  <script>
+function adicionarGrupo() {
+  const novoGrupo = prompt("Digite o nome do novo grupo:");
+  if (novoGrupo) {
+    let grupos = JSON.parse(localStorage.getItem('grupos') || "[]");
+    if (!grupos.includes(novoGrupo)) {
+      grupos.push(novoGrupo);
+      localStorage.setItem('grupos', JSON.stringify(grupos));
+      renderizarGrupos();
+    } else {
+      alert("Grupo já existe!");
+    }
+  }
+}
+
+function adicionarMarca() {
+  const novaMarca = prompt("Digite o nome da nova marca:");
+  if (novaMarca) {
+    let marcas = JSON.parse(localStorage.getItem('marcas') || "[]");
+    if (!marcas.includes(novaMarca)) {
+      marcas.push(novaMarca);
+      localStorage.setItem('marcas', JSON.stringify(marcas));
+      renderizarMarcas();
+    } else {
+      alert("Marca já existe!");
+    }
+  }
+}
+
+function renderizarGrupos() {
+  const grupoSelect = document.getElementById('grupoSelect');
+  if (!grupoSelect) return;
+  let grupos = JSON.parse(localStorage.getItem('grupos') || "[]");
+  grupoSelect.innerHTML = "<option disabled selected>Selecione</option>";
+  grupos.forEach(grupo => {
+    const opt = document.createElement("option");
+    opt.value = grupo;
+    opt.textContent = grupo;
+    grupoSelect.appendChild(opt);
+  });
+}
+
+function renderizarMarcas() {
+  const marcaSelect = document.getElementById('marcaSelect');
+  if (!marcaSelect) return;
+  let marcas = JSON.parse(localStorage.getItem('marcas') || "[]");
+  marcaSelect.innerHTML = "<option disabled selected>Selecione</option>";
+  marcas.forEach(marca => {
+    const opt = document.createElement("option");
+    opt.value = marca;
+    opt.textContent = marca;
+    marcaSelect.appendChild(opt);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  renderizarGrupos();
+  renderizarMarcas();
+  document.getElementById("addGrupoBtn")?.addEventListener("click", adicionarGrupo);
+  document.getElementById("addMarcaBtn")?.addEventListener("click", adicionarMarca);
+});
+</script>
+
 </body>
 
 </html>
