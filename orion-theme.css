@@ -134,4 +134,75 @@ body.theme-light .card {
 /* Navbar */
 .navbar-orion {
     background-color: var(--orion-blue
+                          /* Completando estilos adicionais */
+@media (max-width: 768px) {
+  .wrapper {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+  
+  .content {
+    width: 100%;
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .stat-card .value {
+    font-size: 1.75rem;
+  }
+}
+
+/* Transições e animações */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Estilos adicionais para notificações */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: var(--dark-surface);
+  color: var(--text-light);
+  padding: 10px 15px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  z-index: 1000;
+  transition: var(--transition);
+  transform: translateY(100px);
+  opacity: 0;
+}
+
+.toast-notification.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast-success {
+  border-left: 4px solid var(--success);
+}
+
+.toast-warning {
+  border-left: 4px solid var(--warning);
+}
+
+.toast-error {
+  border-left: 4px solid var(--danger);
+}
+
+.toast-info {
+  border-left: 4px solid var(--info);
+}
                           
