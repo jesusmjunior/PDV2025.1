@@ -1,170 +1,129 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORION PDV</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORION PDV - Login</title>
+  <link rel="stylesheet" href="assets/css/orion-theme.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <style>
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--dark) 0%, var(--dark-surface) 100%);
+    }
+    
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem;
+      background-color: var(--dark-lighter);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+    
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .login-logo {
+      max-width: 150px;
+      margin-bottom: 1rem;
+    }
+    
+    .alert {
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: var(--border-radius);
+    }
+    
+    .alert-danger {
+      background-color: rgba(229, 57, 53, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(229, 57, 53, 0.3);
+    }
+    
+    .alert-success {
+      background-color: rgba(67, 160, 71, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(67, 160, 71, 0.3);
+    }
+  </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row flex-nowrap">
-            <!-- Sidebar -->
-            <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
-                <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
-                    <a href="index.html" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                        <img src="https://i.imgur.com/Ka8kNST.png" alt="Logo" width="40" class="me-2">
-                        <span class="fs-5 d-none d-sm-inline">ORION PDV</span>
-                    </a>
-                    <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
-                        <li class="nav-item">
-                            <a href="venda.html" class="nav-link align-middle px-0">
-                                <i class="fs-4 bi-receipt"></i> <span class="ms-1 d-none d-sm-inline">Registrar Venda</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="produto.html" class="nav-link px-0 align-middle">
-                                <i class="fs-4 bi-box"></i> <span class="ms-1 d-none d-sm-inline">Cadastrar Produto</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="cliente.html" class="nav-link px-0 align-middle">
-                                <i class="fs-4 bi-person"></i> <span class="ms-1 d-none d-sm-inline">Cadastrar Cliente</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="relatorio.html" class="nav-link px-0 align-middle">
-                                <i class="fs-4 bi-graph-up"></i> <span class="ms-1 d-none d-sm-inline">Painel Financeiro</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="historico.html" class="nav-link px-0 align-middle">
-                                <i class="fs-4 bi-list-check"></i> <span class="ms-1 d-none d-sm-inline">Histórico de Vendas</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="estoque.html" class="nav-link px-0 align-middle">
-                                <i class="fs-4 bi-archive"></i> <span class="ms-1 d-none d-sm-inline">Gerenciar Estoque</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="config.html" class="nav-link px-0 align-middle">
-                                <i class="fs-4 bi-gear"></i> <span class="ms-1 d-none d-sm-inline">Configurações</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="sobre.html" class="nav-link px-0 align-middle">
-                                <i class="fs-4 bi-info-circle"></i> <span class="ms-1 d-none d-sm-inline">Sobre</span>
-                            </a>
-                        </li>
-                    </ul>
-                    <hr>
-                    <div class="dropdown pb-4">
-                        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fs-4 bi-person-circle"></i>
-                            <span class="d-none d-sm-inline mx-1" id="nomeUsuario">Nome do Usuário</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-                            <li><a class="dropdown-item" href="#" id="btnSair">Sair</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Conteúdo Principal -->
-            <div class="col py-3">
-                <div class="container">
-                    <h1 class="mb-4">Dashboard</h1>
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <div class="card bg-primary text-white mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Total de Vendas</h5>
-                                    <p class="card-text fs-1" id="totalVendas">0</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-success text-white mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Faturamento Total</h5>
-                                    <p class="card-text fs-1" id="faturamentoTotal">R$ 0,00</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-info text-white mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">Produtos Cadastrados</h5>
-                                    <p class="card-text fs-1" id="totalProdutos">0</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5>Últimas Vendas</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>ID</th>
-                                                    <th>Data</th>
-                                                    <th>Cliente</th>
-                                                    <th>Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tabelaUltimasVendas">
-                                                <!-- Preenchido dinamicamente -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="card-footer">
-                                    <a href="historico.html" class="btn btn-sm btn-outline-primary">Ver Todas</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5>Produtos com Estoque Baixo</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>Produto</th>
-                                                    <th>Estoque</th>
-                                                    <th>Ação</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tabelaEstoqueBaixo">
-                                                <!-- Preenchido dinamicamente -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="card-footer">
-                                    <a href="estoque.html" class="btn btn-sm btn-outline-primary">Gerenciar Estoque</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <img src="assets/img/logo.png" alt="ORION PDV" class="login-logo">
+        <h1>ORION PDV</h1>
+        <p class="text-muted">Sistema de Gestão de Vendas</p>
+      </div>
+      
+      <div id="alert-container"></div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username" class="form-label">Usuário</label>
+          <input type="text" id="username" class="form-control" required>
         </div>
+        
+        <div class="form-group">
+          <label for="password" class="form-label">Senha</label>
+          <input type="password" id="password" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+        </div>
+      </form>
+      
+      <div class="text-center text-muted" style="margin-top: 1rem;">
+        <small>© 2025 ORION PDV - ADM. JESUS MARTINS O. JR.</small>
+      </div>
     </div>
+  </div>
 
-    <script src="js/database.js"></script>
-    <script src="js/
+  <script src="assets/js/database.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const loginForm = document.getElementById('login-form');
+      const alertContainer = document.getElementById('alert-container');
+      
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        // Autenticação
+        const result = auth.fazerLogin(username, password);
+        
+        if (result.sucesso) {
+          // Mostrar mensagem de sucesso
+          alertContainer.innerHTML = `
+            <div class="alert alert-success">
+              ${result.mensagem}
+            </div>
+          `;
+          
+          // Redirecionar para dashboard
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
+        } else {
+          // Mostrar mensagem de erro
+          alertContainer.innerHTML = `
+            <div class="alert alert-danger">
+              ${result.mensagem}
+            </div>
+          `;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
