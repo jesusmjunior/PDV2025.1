@@ -285,318 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function carregarMovimentacoes() {
-    // Obter movimentações do banco de dados (implementar no db.js)
-    const movimentacoes = db.getMovimentacoesEstoque ? db.getMovimentacoesEstoque() : [];
-    
-    const tbody = tabelaMovimentacoes.querySelector('tbody');
-    tbody.innerHTML = '';
-    
-    // Ordenar por data (mais recentes primeiro)
-    const movimentacoesOrdenadas = [...movimentacoes].sort((a, b) => 
-      new Date(b.data) - new Date(a.data)
-    );
-    
-    // Adicionar à tabela
-    if (movimentacoesOrdenadas.length > 0) {
-      movimentacoesOrdenadas.forEach(mov => {
-        const tr = document.createElement('tr');
-        
-        // Formatar data
-        const data = new Date(mov.data);
-        const dataFormatada = data.toLocaleDateString('pt-BR') + ' ' + 
-                              data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        
-        // Formatar tipo
-        let tipoFormatado = '';
-        let tipoClass
-        // assets/js/estoque.js
-document.addEventListener('DOMContentLoaded', function() {
-  // Verificar autenticação
-  if (!auth.verificarAutenticacao()) {
-    window.location.href = 'index.html';
-    return;
-  }
-  
-  // Elementos DOM - Abas
-  const tabListagem = document.getElementById('tab-listagem');
-  const tabMovimentacoes = document.getElementById('tab-movimentacoes');
-  const tabScanner = document.getElementById('tab-scanner');
-  
-  const contentListagem = document.getElementById('content-listagem');
-  const contentMovimentacoes = document.getElementById('content-movimentacoes');
-  const contentScanner = document.getElementById('content-scanner');
-  
-  // Elementos DOM - Listagem
-  const buscaProdutoInput = document.getElementById('busca-produto');
-  const filtroGrupoSelect = document.getElementById('filtro-grupo');
-  const tabelaProdutos = document.getElementById('tabela-produtos');
-  const btnExportar = document.getElementById('btn-exportar');
-  
-  // Elementos DOM - Movimentações
-  const tabelaMovimentacoes = document.getElementById('tabela-movimentacoes');
-  const btnNovaMovimentacao = document.getElementById('btn-nova-movimentacao');
-  
-  // Elementos DOM - Scanner
-  const codigoBarrasInput = document.getElementById('codigo-barras');
-  const btnBuscarCodigo = document.getElementById('btn-buscar-codigo');
-  const btnEscanear = document.getElementById('btn-escanear');
-  const btnCancelarScan = document.getElementById('btn-cancelar-scan');
-  const cameraContainer = document.getElementById('camera-container');
-  const scannerVideo = document.getElementById('scanner-video');
-  const resultadoScanner = document.getElementById('resultado-scanner');
-  
-  // Elementos DOM - Modal
-  const modalEstoque = document.getElementById('modal-estoque');
-  const modalTitulo = document.getElementById('modal-titulo');
-  const formEstoque = document.getElementById('form-estoque');
-  const produtoIdSelect = document.getElementById('produto-id');
-  const tipoMovimentacaoSelect = document.getElementById('tipo-movimentacao');
-  const quantidadeInput = document.getElementById('quantidade');
-  const motivoSelect = document.getElementById('motivo');
-  const outroMotivoContainer = document.getElementById('outro-motivo-container');
-  const outroMotivoInput = document.getElementById('outro-motivo');
-  const observacaoInput = document.getElementById('observacao');
-  const btnCloseModal = document.querySelectorAll('.btn-close-modal');
-  
-  // Variáveis de controle
-  let scanner = null;
-  
-  // Dados do usuário
-  const user = auth.getUsuarioAtual();
-  document.getElementById('user-name').textContent = user.nome;
-  
-  // Data atual
-  const dataAtual = new Date();
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('current-date').textContent = dataAtual.toLocaleDateString('pt-BR', options);
-  
-  // Carregar dados iniciais
-  carregarGrupos();
-  carregarProdutos();
-  carregarMovimentacoes();
-  carregarProdutosSelect();
-  
-  // Event Listeners - Abas
-  tabListagem.addEventListener('click', function(e) {
-    e.preventDefault();
-    ativarAba('listagem');
-  });
-  
-  tabMovimentacoes.addEventListener('click', function(e) {
-    e.preventDefault();
-    ativarAba('movimentacoes');
-  });
-  
-  tabScanner.addEventListener('click', function(e) {
-    e.preventDefault();
-    ativarAba('scanner');
-  });
-  
-  // Event Listeners - Listagem
-  buscaProdutoInput.addEventListener('input', carregarProdutos);
-  filtroGrupoSelect.addEventListener('change', carregarProdutos);
-  btnExportar.addEventListener('click', exportarEstoque);
-  
-  // Event Listeners - Movimentações
-  btnNovaMovimentacao.addEventListener('click', abrirModalMovimentacao);
-  
-  // Event Listeners - Scanner
-  btnBuscarCodigo.addEventListener('click', buscarPorCodigoBarras);
-  btnEscanear.addEventListener('click', iniciarScanner);
-  btnCancelarScan.addEventListener('click', pararScanner);
-  
-  codigoBarrasInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      buscarPorCodigoBarras();
-    }
-  });
-  
-  // Event Listeners - Modal
-  formEstoque.addEventListener('submit', function(e) {
-    e.preventDefault();
-    salvarMovimentacao();
-  });
-  
-  motivoSelect.addEventListener('change', function() {
-    if (this.value === 'outro') {
-      outroMotivoContainer.style.display = 'block';
-      outroMotivoInput.required = true;
-    } else {
-      outroMotivoContainer.style.display = 'none';
-      outroMotivoInput.required = false;
-    }
-  });
-  
-  btnCloseModal.forEach(btn => {
-    btn.addEventListener('click', function() {
-      modalEstoque.style.display = 'none';
-    });
-  });
-  
-  // Logout
-  document.getElementById('btn-logout').addEventListener('click', function() {
-    auth.fazerLogout();
-    window.location.href = 'index.html';
-  });
-  
-  // Funções - Abas
-  function ativarAba(aba) {
-    // Desativar todas as abas
-    tabListagem.classList.remove('active');
-    tabListagem.style.color = 'var(--text-muted)';
-    tabListagem.style.borderBottom = '2px solid transparent';
-    
-    tabMovimentacoes.classList.remove('active');
-    tabMovimentacoes.style.color = 'var(--text-muted)';
-    tabMovimentacoes.style.borderBottom = '2px solid transparent';
-    
-    tabScanner.classList.remove('active');
-    tabScanner.style.color = 'var(--text-muted)';
-    tabScanner.style.borderBottom = '2px solid transparent';
-    
-    // Ocultar todos os conteúdos
-    contentListagem.style.display = 'none';
-    contentMovimentacoes.style.display = 'none';
-    contentScanner.style.display = 'none';
-    
-    // Ativar aba selecionada
-    if (aba === 'listagem') {
-      tabListagem.classList.add('active');
-      tabListagem.style.color = 'var(--text-light)';
-      tabListagem.style.borderBottom = '2px solid var(--primary)';
-      contentListagem.style.display = 'block';
-    } else if (aba === 'movimentacoes') {
-      tabMovimentacoes.classList.add('active');
-      tabMovimentacoes.style.color = 'var(--text-light)';
-      tabMovimentacoes.style.borderBottom = '2px solid var(--primary)';
-      contentMovimentacoes.style.display = 'block';
-    } else if (aba === 'scanner') {
-      tabScanner.classList.add('active');
-      tabScanner.style.color = 'var(--text-light)';
-      tabScanner.style.borderBottom = '2px solid var(--primary)';
-      contentScanner.style.display = 'block';
-    }
-    
-    // Parar scanner se sair da aba
-    if (aba !== 'scanner' && scanner) {
-      pararScanner();
-    }
-  }
-  
-  // Funções - Carregamento de dados
-  function carregarGrupos() {
-    const grupos = db.getGrupos();
-    
-    // Limpar opções existentes (exceto "Todos os Grupos")
-    while (filtroGrupoSelect.options.length > 1) {
-      filtroGrupoSelect.remove(1);
-    }
-    
-    // Adicionar grupos
-    grupos.forEach(grupo => {
-      const option = document.createElement('option');
-      option.value = grupo;
-      option.textContent = grupo;
-      filtroGrupoSelect.appendChild(option);
-    });
-  }
-  
-  function carregarProdutos() {
-    const produtos = db.getProdutos();
-    const termoBusca = buscaProdutoInput.value.toLowerCase();
-    const grupoSelecionado = filtroGrupoSelect.value;
-    
-    // Limpar tabela
-    const tbody = tabelaProdutos.querySelector('tbody');
-    tbody.innerHTML = '';
-    
-    // Filtrar produtos
-    let produtosFiltrados = Object.values(produtos);
-    
-    if (termoBusca) {
-      produtosFiltrados = produtosFiltrados.filter(produto => 
-        produto.nome.toLowerCase().includes(termoBusca) || 
-        produto.codigo_barras.includes(termoBusca)
-      );
-    }
-    
-    if (grupoSelecionado) {
-      produtosFiltrados = produtosFiltrados.filter(produto => 
-        produto.grupo === grupoSelecionado
-      );
-    }
-    
-    // Ordenar por nome
-    produtosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
-    
-    // Adicionar à tabela
-    produtosFiltrados.forEach(produto => {
-      const tr = document.createElement('tr');
-      
-      // Definir status
-      let status = '';
-      let statusClass = '';
-      
-      if (produto.estoque <= 0) {
-        status = 'Sem estoque';
-        statusClass = 'danger';
-      } else if (produto.estoque <= produto.estoque_minimo) {
-        status = 'Baixo';
-        statusClass = 'warning';
-      } else {
-        status = 'Normal';
-        statusClass = 'success';
-      }
-      
-      tr.innerHTML = `
-        <td>${produto.codigo_barras}</td>
-        <td>${produto.nome}</td>
-        <td>${produto.grupo}</td>
-        <td>R$ ${produto.preco.toFixed(2)}</td>
-        <td>${produto.estoque}</td>
-        <td>${produto.estoque_minimo}</td>
-        <td><span class="badge bg-${statusClass}">${status}</span></td>
-        <td>
-          <button class="btn btn-outline-primary btn-sm btn-adicionar" data-id="${produto.id}" title="Adicionar Estoque">
-            <i class="fas fa-plus"></i>
-          </button>
-          <button class="btn btn-outline-danger btn-sm btn-subtrair" data-id="${produto.id}" title="Remover Estoque">
-            <i class="fas fa-minus"></i>
-          </button>
-          <button class="btn btn-outline-info btn-sm btn-ajustar" data-id="${produto.id}" title="Ajustar Estoque">
-            <i class="fas fa-sync-alt"></i>
-          </button>
-        </td>
-      `;
-      
-      tbody.appendChild(tr);
-    });
-    
-    // Adicionar eventos aos botões
-    document.querySelectorAll('.btn-adicionar').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        abrirModalMovimentacao('entrada', id);
-      });
-    });
-    
-    document.querySelectorAll('.btn-subtrair').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        abrirModalMovimentacao('saida', id);
-      });
-    });
-    
-    document.querySelectorAll('.btn-ajustar').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        abrirModalMovimentacao('ajuste', id);
-      });
-    });
-  }
-  
-  function carregarMovimentacoes() {
-    // Obter movimentações do banco de dados (implementar no db.js)
+    // Obter movimentações do banco de dados
     const movimentacoes = db.getMovimentacoesEstoque ? db.getMovimentacoesEstoque() : [];
     
     const tbody = tabelaMovimentacoes.querySelector('tbody');
@@ -752,6 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // Esta função será substituída pela implementação em barcode-integration.js
   function iniciarScanner() {
     // Mostrar container da câmera
     cameraContainer.style.display = 'block';
@@ -779,21 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
           "upc_reader",
           "upc_e_reader",
           "i2of5_reader"
-        ],
-        debug: {
-          showCanvas: true,
-          showPatches: true,
-          showFoundPatches: true,
-          showSkeleton: true,
-          showLabels: true,
-          showPatchLabels: true,
-          showRemainingPatchLabels: true,
-          boxFromPatches: {
-            showTransformed: true,
-            showTransformedBox: true,
-            showBB: true
-          }
-        }
+        ]
       },
     }, function(err) {
       if (err) {
@@ -826,6 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
     scanner = true;
   }
   
+  // Esta função será substituída pela implementação em barcode-integration.js
   function pararScanner() {
     if (scanner) {
       Quagga.stop();
@@ -1019,4 +696,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 300);
     }, 3000);
   }
+  
+  // Tornar funções importantes acessíveis globalmente para integração com barcode-integration.js
+  window.buscarPorCodigoBarras = buscarPorCodigoBarras;
+  window.iniciarScanner = iniciarScanner;
+  window.pararScanner = pararScanner;
 });
