@@ -1,58 +1,161 @@
-// Arquivo: js/auth.js
-class Auth {
+// assets/js/auth.js
+class OrionAuth {
     constructor() {
         this.usuarioAtual = null;
         this.verificarAutenticacao();
     }
     
     verificarAutenticacao() {
-        const usuarioSalvo = sessionStorage.getItem('usuario_atual');
+        // Verificar se existe um usuário na sessão
+        const usuarioSalvo = sessionStorage.getItem('orion_usuario_atual');
         if (usuarioSalvo) {
-            this.usuarioAtual = JSON.parse(usuarioSalvo);
+            try {
+                this.usuarioAtual = JSON.parse(usuarioSalvo);
+                // Verificar validade da sessão (8 horas)
+                const agora = new Date().getTime();
+                const ultimoLogin = new Date(this.usuarioAtual.timestamp).getTime();
+                const horasAtivas = (agora - ultimoLogin) / (1000 * 60 * 60);
+                
+                if (horasAtivas > 8) {
+                    console.log('Sessão expirada');
+                    this.fazerLogout();
+                    return false;
+                }
+                
+                return true;
+            } catch (e) {
+                console.error('Erro ao recuperar sessão:', e);
+                this.fazerLogout();
+                return false;
+            }
         }
-        return this.usuarioAtual !== null;
+        return false;
     }
     
-    gerarHash(texto) {
-        // Usando SHA-256 para hash de senha
-        return CryptoJS.SHA256(texto).toString();
-    }
-    
-    login(usuario, senha) {
-        const usuarios = JSON.parse(localStorage.getItem('usuarios') || '{}');
+    fazerLogin(usuario, senha) {
+        const usuarios = db.getUsuarios();
         
         if (usuarios[usuario]) {
-            const senhaHash = this.gerarHash(senha);
-            if (senhaHash === usuarios[usuario].senha_hash) {
-                this.usuarioAtual = {
-                    usuario: usuario,
-                    nome: usuarios[usuario].nome
+            const usuarioObj = usuarios[usuario];
+            const senhaHash = db.hashPassword(senha);
+            
+            if (senhaHash === usuarioObj.senha_hash) {
+                // Criar objeto de sessão
+                const dadosSessao = {
+                    username: usuario,
+                    nome: usuarioObj.nome,
+                    perfil: usuarioObj.perfil,
+                    timestamp: new Date().toISOString()
                 };
-                sessionStorage.setItem('usuario_atual', JSON.stringify(this.usuarioAtual));
-                return { sucesso: true, mensagem: 'Login realizado com sucesso' };
+                
+                // Salvar na sessão
+                this.usuarioAtual = dadosSessao;
+                sessionStorage.setItem('orion_usuario_atual', JSON.stringify(dadosSessao));
+                
+                // Atualizar último acesso no banco
+                usuarioObj.ultimo_acesso = new Date().toISOString();
+                db.adicionarUsuario(usuarioObj);
+                
+                return {
+                    sucesso: true,
+                    mensagem: 'Login realizado com sucesso!',
+                    dados: dadosSessao
+                };
             } else {
-                return { sucesso: false, mensagem: 'Senha incorreta' };
+                return {
+                    sucesso: false,
+                    mensagem: 'Senha incorreta!'
+                };
             }
         } else {
-            return { sucesso: false, mensagem: 'Usuário não encontrado' };
+            return {
+                sucesso: false,
+                mensagem: 'Usuário não encontrado!'
+            };
         }
     }
     
-    logout() {
+    fazerLogout() {
         this.usuarioAtual = null;
-        sessionStorage.removeItem('usuario_atual');
-        window.location.href = 'login.html';
+        sessionStorage.removeItem('orion_usuario_atual');
+        return {
+            sucesso: true,
+            mensagem: 'Logout realizado com sucesso!'
+        };
     }
     
-    obterUsuarioAtual() {
+    getUsuarioAtual() {
         return this.usuarioAtual;
+    }
+    
+    verificarPermissao(permissao) {
+        if (!this.usuarioAtual) return false;
+        
+        const perfil = this.usuarioAtual.perfil;
+        
+        // Verificações de permissão básicas
+        switch (permissao) {
+            case 'admin':
+                return perfil === 'admin';
+            case 'venda':
+                return perfil === 'admin' || perfil === 'vendedor';
+            case 'relatorio':
+                return perfil === 'admin' || perfil === 'gerente';
+            case 'estoque':
+                return perfil === 'admin' || perfil === 'gerente' || perfil === 'estoquista';
+            default:
+                return false;
+        }
+    }
+    
+    alterarSenha(senhaAtual, novaSenha) {
+        if (!this.usuarioAtual) {
+            return {
+                sucesso: false,
+                mensagem: 'Usuário não autenticado!'
+            };
+        }
+        
+        const username = this.usuarioAtual.username;
+        const usuarios = db.getUsuarios();
+        
+        if (usuarios[username]) {
+            const senhaAtualHash = db.hashPassword(senhaAtual);
+            
+            if (senhaAtualHash === usuarios[username].senha_hash) {
+                // Atualizar senha
+                usuarios[username].senha_hash = db.hashPassword(novaSenha);
+                localStorage.setItem('orion_usuarios', JSON.stringify(usuarios));
+                
+                return {
+                    sucesso: true,
+                    mensagem: 'Senha alterada com sucesso!'
+                };
+            } else {
+                return {
+                    sucesso: false,
+                    mensagem: 'Senha atual incorreta!'
+                };
+            }
+        } else {
+            return {
+                sucesso: false,
+                mensagem: 'Usuário não encontrado!'
+            };
+        }
     }
 }
 
-// Instância global de autenticação
-const auth = new Auth();
+// Inicialização global
+const auth = new OrionAuth();
 
-// Redirecionar para login se não estiver autenticado (exceto na página de login)
-if (!auth.verificarAutenticacao() && !window.location.href.includes('login.html')) {
-    window.location.href = 'login.html';
-}
+// Redirecionar para login se não estiver autenticado
+document.addEventListener('DOMContentLoaded', function() {
+    const isLoginPage = window.location.href.includes('login.html');
+    
+    if (!auth.verificarAutenticacao() && !isLoginPage) {
+        window.location.href = 'login.html';
+    } else if (auth.verificarAutenticacao() && isLoginPage) {
+        window.location.href = 'dashboard.html';
+    }
+});
