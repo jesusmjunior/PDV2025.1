@@ -97,3 +97,41 @@ body.theme-dark .table-striped tbody tr:nth-of-type(odd) {
 body.theme-dark .form-control,
 body.theme-dark .form-select {
     background-color: var(--orion
+                          /* Continuação - assets/css/orion-theme.css */
+body.theme-dark .form-control,
+body.theme-dark .form-select {
+    background-color: var(--orion-black);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--orion-white);
+}
+
+body.theme-dark .modal-content {
+    background-color: var(--orion-dark-gray);
+    color: var(--orion-white);
+}
+
+/* Tema Claro - Alternativo */
+body.theme-light {
+    background-color: #f5f5f5;
+    color: var(--orion-black);
+}
+
+body.theme-light .navbar {
+    background-color: var(--orion-blue-dark);
+    color: var(--orion-white);
+}
+
+body.theme-light .sidebar {
+    background-color: var(--orion-blue-dark);
+    color: var(--orion-white);
+}
+
+body.theme-light .card {
+    background-color: var(--orion-white);
+}
+
+/* ========== COMPONENTES ========== */
+/* Navbar */
+.navbar-orion {
+    background-color: var(--orion-blue
+                          
