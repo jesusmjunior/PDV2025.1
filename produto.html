@@ -1,105 +1,694 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Estoque - ORION PDV</title>
-  <link rel="stylesheet" href="assets/css/orion-theme.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; }
-    h1 { margin-bottom: 1rem; }
-    .table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-    .table th, .table td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: left;
-    }
-    .pagination {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-    .pagination button {
-      padding: 0.4rem 0.7rem;
-      border: none;
-      background: #eee;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .pagination button.active {
-      background: #007bff;
-      color: white;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro de Produtos - ORION PDV</title>
+  <link rel="stylesheet" href="assets/css/orion-theme.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
-  <main>
-    <h1>📦 Estoque de Produtos</h1>
-    <table id="tabelaEstoque" class="table">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Nome</th>
-          <th>Grupo</th>
-          <th>Marca</th>
-          <th>Preço</th>
-          <th>Estoque</th>
-          <th>Mínimo</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <div class="wrapper">
+    <!-- Sidebar (igual ao dashboard.html) -->
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="assets/img/logo.png" alt="ORION PDV">
+        <span class="logo-text">ORION PDV</span>
+      </div>
+      
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link">
+            <i class="fas fa-tachometer-alt nav-icon"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="venda.html" class="nav-link">
+            <i class="fas fa-shopping-cart nav-icon"></i>
+            <span>Registrar Venda</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="produto.html" class="nav-link active">
+            <i class="fas fa-box nav-icon"></i>
+            <span>Cadastrar Produto</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="cliente.html" class="nav-link">
+            <i class="fas fa-user nav-icon"></i>
+            <span>Cadastrar Cliente</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="relatorio.html" class="nav-link">
+            <i class="fas fa-chart-bar nav-icon"></i>
+            <span>Painel Financeiro</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="estoque.html" class="nav-link">
+            <i class="fas fa-warehouse nav-icon"></i>
+            <span>Gerenciar Estoque</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="config.html" class="nav-link">
+            <i class="fas fa-cog nav-icon"></i>
+            <span>Configurações</span>
+          </a>
+        </li>
+      </ul>
+      
+      <div style="margin-top: auto; padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+          <i class="fas fa-user-circle" style="font-size: 1.5rem; margin-right: 10px;"></i>
+          <div>
+            <div id="user-name" style="font-weight: 500;">Nome do Usuário</div>
+            <small class="text-muted">Administrador</small>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline-primary" style="width: 100%;">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+      </div>
+    </aside>
 
-    <div id="paginacaoEstoque" class="pagination"></div>
-  </main>
+    <!-- Conteúdo principal -->
+    <main class="content">
+      <div class="header" style="margin-bottom: 1.5rem;">
+        <h1>Cadastro de Produtos</h1>
+        <div>
+          <span id="current-date"></span>
+        </div>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 350px; gap: 1.5rem;">
+        <!-- Lista de produtos -->
+        <div class="card">
+          <div class="card-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <i class="fas fa-list"></i> Produtos Cadastrados
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <select id="filtro-grupo" class="form-control" style="width: 150px;">
+                    <option value="">Todos os Grupos</option>
+                    <!-- Preenchido via JavaScript -->
+                  </select>
+                </div>
+                <div style="position: relative;">
+                  <input type="text" id="busca-produto" class="form-control" placeholder="Buscar produto..." style="width: 200px; padding-left: 36px;">
+                  <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                </div>
+                <button id="btn-novo-produto" class="btn btn-primary">
+                  <i class="fas fa-plus"></i> Novo
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table class="table" id="tabela-produtos">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Grupo</th>
+                    <th>Preço</th>
+                    <th>Estoque</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Preenchido via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Formulário de produto -->
+        <div class="card" id="card-formulario">
+          <div class="card-header">
+            <i class="fas fa-box"></i> <span id="form-titulo">Novo Produto</span>
+          </div>
+          <div class="card-body">
+            <form id="form-produto">
+              <input type="hidden" id="produto-id">
+              
+              <div class="form-group">
+                <label for="codigo-barras" class="form-label">Código de Barras</label>
+                <div style="display: flex; gap: 0.5rem;">
+                  <input type="text" id="codigo-barras" class="form-control" required>
+                  <button type="button" id="btn-gerar-codigo" class="btn btn-outline-primary" title="Gerar código">
+                    <i class="fas fa-barcode"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="nome" class="form-label">Nome do Produto</label>
+                <input type="text" id="nome" class="form-control" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="grupo" class="form-label">Grupo</label>
+                <div style="display: flex; gap: 0.5rem;">
+                  <select id="grupo" class="form-control" required>
+                    <!-- Preenchido via JavaScript -->
+                  </select>
+                  <button type="button" id="btn-novo-grupo" class="btn btn-outline-primary" title="Novo Grupo">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="marca" class="form-label">Marca</label>
+                <div style="display: flex; gap: 0.5rem;">
+                  <select id="marca" class="form-control">
+                    <!-- Preenchido via JavaScript -->
+                  </select>
+                  <button type="button" id="btn-nova-marca" class="btn btn-outline-primary" title="Nova Marca">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="preco" class="form-label">Preço de Venda (R$)</label>
+                <input type="number" id="preco" class="form-control" step="0.01" min="0.01" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="estoque" class="form-label">Estoque Atual</label>
+                <input type="number" id="estoque" class="form-control" min="0" step="1" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="estoque-minimo" class="form-label">Estoque Mínimo</label>
+                <input type="number" id="estoque-minimo" class="form-control" min="0" step="1" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="foto" class="form-label">URL da Imagem (opcional)</label>
+                <input type="text" id="foto" class="form-control" placeholder="https://...">
+              </div>
+              
+              <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                <button type="button" id="btn-cancelar" class="btn btn-outline-primary" style="flex: 1;">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                  Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modal para novo grupo/marca -->
+      <div id="modal-adicionar" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background-color: var(--dark-surface); width: 400px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="modal-titulo">Adicionar Novo</h3>
+            <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+          </div>
+          <div class="card-body">
+            <form id="form-modal">
+              <div class="form-group">
+                <label for="novo-item" class="form-label" id="modal-label">Nome</label>
+                <input type="text" id="novo-item" class="form-control" required>
+              </div>
+              
+              <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
+                <button type="button" class="btn-close-modal btn btn-outline-primary">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Adicionar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 
+  <script src="assets/js/database.js"></script>
+  <script src="assets/js/auth.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const tbody = document.querySelector("#tabelaEstoque tbody");
-      const paginacao = document.getElementById("paginacaoEstoque");
-      const produtos = Object.values(JSON.parse(localStorage.getItem("orion_produtos") || "{}"));
-      const porPagina = 10;
-      let paginaAtual = 1;
-
-      function exibirTabela() {
-        tbody.innerHTML = "";
-        const inicio = (paginaAtual - 1) * porPagina;
-        const fim = inicio + porPagina;
-        const page = produtos.slice(inicio, fim);
-        for (let p of page) {
-          const tr = document.createElement("tr");
+    document.addEventListener('DOMContentLoaded', function() {
+      // Verificar autenticação
+      if (!auth.verificarAutenticacao()) {
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      // Elementos DOM
+      const buscaProdutoInput = document.getElementById('busca-produto');
+      const filtroGrupoSelect = document.getElementById('filtro-grupo');
+      const tabelaProdutos = document.getElementById('tabela-produtos');
+      const formProduto = document.getElementById('form-produto');
+      const cardFormulario = document.getElementById('card-formulario');
+      const formTitulo = document.getElementById('form-titulo');
+      const produtoIdInput = document.getElementById('produto-id');
+      const codigoBarrasInput = document.getElementById('codigo-barras');
+      const nomeInput = document.getElementById('nome');
+      const grupoSelect = document.getElementById('grupo');
+      const marcaSelect = document.getElementById('marca');
+      const precoInput = document.getElementById('preco');
+      const estoqueInput = document.getElementById('estoque');
+      const estoqueMinimoInput = document.getElementById('estoque-minimo');
+      const fotoInput = document.getElementById('foto');
+      const btnNovoGrupo = document.getElementById('btn-novo-grupo');
+      const btnNovaMarca = document.getElementById('btn-nova-marca');
+      const btnNovoProduto = document.getElementById('btn-novo-produto');
+      const btnCancelar = document.getElementById('btn-cancelar');
+      const btnGerarCodigo = document.getElementById('btn-gerar-codigo');
+      
+      // Modal
+      const modalAdicionar = document.getElementById('modal-adicionar');
+      const modalTitulo = document.getElementById('modal-titulo');
+      const modalLabel = document.getElementById('modal-label');
+      const novoItemInput = document.getElementById('novo-item');
+      const formModal = document.getElementById('form-modal');
+      const btnCloseModal = document.querySelectorAll('.btn-close-modal');
+      
+      // Variáveis de controle
+      let modoEdicao = false;
+      let tipoModal = '';
+      
+      // Dados do usuário
+      const user = auth.getUsuarioAtual();
+      document.getElementById('user-name').textContent = user.nome;
+      
+      // Data atual
+      const dataAtual = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('current-date').textContent = dataAtual.toLocaleDateString('pt-BR', options);
+      
+      // Carregar dados iniciais
+      carregarGrupos();
+      carregarMarcas();
+      carregarProdutos();
+      
+      // Event Listeners
+      buscaProdutoInput.addEventListener('input', carregarProdutos);
+      filtroGrupoSelect.addEventListener('change', carregarProdutos);
+      formProduto.addEventListener('submit', salvarProduto);
+      btnNovoProduto.addEventListener('click', novoProduto);
+      btnCancelar.addEventListener('click', cancelarFormulario);
+      btnGerarCodigo.addEventListener('click', gerarCodigoBarras);
+      
+      btnNovoGrupo.addEventListener('click', function() {
+        abrirModal('grupo');
+      });
+      
+      btnNovaMarca.addEventListener('click', function() {
+        abrirModal('marca');
+      });
+      
+      btnCloseModal.forEach(btn => {
+        btn.addEventListener('click', function() {
+          modalAdicionar.style.display = 'none';
+        });
+      });
+      
+      formModal.addEventListener('submit', function(e) {
+        e.preventDefault();
+        salvarItemModal();
+      });
+      
+      // Logout
+      document.getElementById('btn-logout').addEventListener('click', function() {
+        auth.fazerLogout();
+        window.location.href = 'index.html';
+      });
+      
+      // Funções
+      function carregarGrupos() {
+        const grupos = db.getGrupos();
+        
+        // Limpar opções existentes
+        grupoSelect.innerHTML = '';
+        
+        // Adicionar grupos ao select do formulário
+        grupos.forEach(grupo => {
+          const option = document.createElement('option');
+          option.value = grupo;
+          option.textContent = grupo;
+          grupoSelect.appendChild(option);
+        });
+        
+        // Limpar opções do filtro (exceto "Todos os Grupos")
+        while (filtroGrupoSelect.options.length > 1) {
+          filtroGrupoSelect.remove(1);
+        }
+        
+        // Adicionar grupos ao filtro
+        grupos.forEach(grupo => {
+          const option = document.createElement('option');
+          option.value = grupo;
+          option.textContent = grupo;
+          filtroGrupoSelect.appendChild(option);
+        });
+      }
+      
+      function carregarMarcas() {
+        const marcas = db.getMarcas();
+        
+        // Limpar opções existentes
+        marcaSelect.innerHTML = '';
+        
+        // Adicionar opção em branco
+        const optionVazia = document.createElement('option');
+        optionVazia.value = '';
+        optionVazia.textContent = 'Selecione uma marca';
+        marcaSelect.appendChild(optionVazia);
+        
+        // Adicionar marcas
+        marcas.forEach(marca => {
+          const option = document.createElement('option');
+          option.value = marca;
+          option.textContent = marca;
+          marcaSelect.appendChild(option);
+        });
+      }
+      
+      function carregarProdutos() {
+        const produtos = db.getProdutos();
+        const termoBusca = buscaProdutoInput.value.toLowerCase();
+        const grupoSelecionado = filtroGrupoSelect.value;
+        
+        // Limpar tabela
+        const tbody = tabelaProdutos.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        // Filtrar produtos
+        let produtosFiltrados = Object.values(produtos);
+        
+        if (termoBusca) {
+          produtosFiltrados = produtosFiltrados.filter(produto => 
+            produto.nome.toLowerCase().includes(termoBusca) || 
+            produto.codigo_barras.includes(termoBusca)
+          );
+        }
+        
+        if (grupoSelecionado) {
+          produtosFiltrados = produtosFiltrados.filter(produto => 
+            produto.grupo === grupoSelecionado
+          );
+        }
+        
+        // Ordenar por nome
+        produtosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
+        
+        // Adicionar à tabela
+        produtosFiltrados.forEach(produto => {
+          const tr = document.createElement('tr');
+          
           tr.innerHTML = `
-            <td>${p.codigo_barras}</td>
-            <td>${p.nome}</td>
-            <td>${p.grupo}</td>
-            <td>${p.marca}</td>
-            <td>R$ ${p.preco.toFixed(2)}</td>
-            <td>${p.estoque}</td>
-            <td>${p.estoque_minimo}</td>
+            <td>${produto.codigo_barras}</td>
+            <td>${produto.nome}</td>
+            <td>${produto.grupo}</td>
+            <td>R$ ${produto.preco.toFixed(2)}</td>
+            <td>
+              <span class="${produto.estoque <= produto.estoque_minimo ? 'text-danger' : ''}">
+                ${produto.estoque}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-outline-primary btn-sm btn-editar" data-id="${produto.id}">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-outline-danger btn-sm btn-excluir" data-id="${produto.id}">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
           `;
+          
           tbody.appendChild(tr);
-        }
-      }
-
-      function criarPaginacao() {
-        paginacao.innerHTML = "";
-        const totalPaginas = Math.ceil(produtos.length / porPagina);
-        for (let i = 1; i <= totalPaginas; i++) {
-          const btn = document.createElement("button");
-          btn.textContent = i;
-          if (i === paginaAtual) btn.classList.add("active");
-          btn.addEventListener("click", () => {
-            paginaAtual = i;
-            exibirTabela();
-            criarPaginacao();
+        });
+        
+        // Adicionar eventos aos botões
+        document.querySelectorAll('.btn-editar').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            editarProduto(id);
           });
-          paginacao.appendChild(btn);
+        });
+        
+        document.querySelectorAll('.btn-excluir').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            excluirProduto(id);
+          });
+        });
+      }
+      
+      function novoProduto() {
+        // Limpar formulário
+        formProduto.reset();
+        produtoIdInput.value = '';
+        
+        // Configurar modo
+        modoEdicao = false;
+        formTitulo.textContent = 'Novo Produto';
+        
+        // Valores padrão
+        estoqueMinimoInput.value = '5';
+      }
+      
+      function editarProduto(id) {
+        const produto = db.getProduto(id);
+        
+        if (produto) {
+          // Preencher formulário
+          produtoIdInput.value = produto.id;
+          codigoBarrasInput.value = produto.codigo_barras;
+          nomeInput.value = produto.nome;
+          grupoSelect.value = produto.grupo;
+          marcaSelect.value = produto.marca || '';
+          precoInput.value = produto.preco;
+          estoqueInput.value = produto.estoque;
+          estoqueMinimoInput.value = produto.estoque_minimo;
+          fotoInput.value = produto.foto || '';
+          
+          // Configurar modo
+          modoEdicao = true;
+          formTitulo.textContent = 'Editar Produto';
+          
+          // Scroll até o formulário em dispositivos móveis
+          if (window.innerWidth < 768) {
+            cardFormulario.scrollIntoView({ behavior: 'smooth' });
+          }
         }
       }
-
-      exibirTabela();
-      criarPaginacao();
+      
+      function excluirProduto(id) {
+        const produto = db.getProduto(id);
+        
+        if (produto) {
+          const confirmar = confirm(`Deseja realmente excluir o produto "${produto.nome}"?`);
+          
+          if (confirmar) {
+            try {
+              db.deletarProduto(id);
+              carregarProdutos();
+              exibirMensagem('Produto excluído com sucesso', 'success');
+            } catch (erro) {
+              exibirMensagem('Erro ao excluir produto: ' + erro, 'error');
+            }
+          }
+        }
+      }
+      
+      function salvarProduto(e) {
+        e.preventDefault();
+        
+        // Obter dados do formulário
+        const produto = {
+          id: produtoIdInput.value,
+          codigo_barras: codigoBarrasInput.value,
+          nome: nomeInput.value,
+          grupo: grupoSelect.value,
+          marca: marcaSelect.value,
+          preco: parseFloat(precoInput.value),
+          estoque: parseInt(estoqueInput.value),
+          estoque_minimo: parseInt(estoqueMinimoInput.value),
+          foto: fotoInput.value
+        };
+        
+        try {
+          // Salvar produto
+          db.salvarProduto(produto);
+          
+          // Atualizar tabela
+          carregarProdutos();
+          
+          // Limpar formulário
+          formProduto.reset();
+          produtoIdInput.value = '';
+          
+          // Resetar modo
+          modoEdicao = false;
+          formTitulo.textContent = 'Novo Produto';
+          
+          // Mensagem de sucesso
+          exibirMensagem('Produto salvo com sucesso', 'success');
+        } catch (erro) {
+          exibirMensagem('Erro ao salvar produto: ' + erro, 'error');
+        }
+      }
+      
+      function cancelarFormulario() {
+        // Limpar formulário
+        formProduto.reset();
+        produtoIdInput.value = '';
+        
+        // Resetar modo
+        modoEdicao = false;
+        formTitulo.textContent = 'Novo Produto';
+      }
+      
+      function gerarCodigoBarras() {
+        // Gerar código de 13 dígitos (similar a EAN-13)
+        let codigo = '789';  // Prefixo Brasil
+        
+        // Gerar mais 9 dígitos
+        for (let i = 0; i < 9; i++) {
+          codigo += Math.floor(Math.random() * 10);
+        }
+        
+        // Calcular dígito verificador (simplificado)
+        let soma = 0;
+        for (let i = 0; i < codigo.length; i++) {
+          soma += parseInt(codigo[i]) * (i % 2 === 0 ? 1 : 3);
+        }
+        
+        const digitoVerificador = (10 - (soma % 10)) % 10;
+        
+        // Adicionar dígito verificador
+        codigo += digitoVerificador;
+        
+        // Atualizar campo
+        codigoBarrasInput.value = codigo;
+      }
+      
+      function abrirModal(tipo) {
+        tipoModal = tipo;
+        
+        // Configurar modal
+        if (tipo === 'grupo') {
+          modalTitulo.textContent = 'Adicionar Novo Grupo';
+          modalLabel.textContent = 'Nome do Grupo';
+        } else {
+          modalTitulo.textContent = 'Adicionar Nova Marca';
+          modalLabel.textContent = 'Nome da Marca';
+        }
+        
+        // Limpar input
+        novoItemInput.value = '';
+        
+        // Exibir modal
+        modalAdicionar.style.display = 'flex';
+        
+        // Focar no input
+        setTimeout(() => {
+          novoItemInput.focus();
+        }, 100);
+      }
+      
+      function salvarItemModal() {
+        const novoItem = novoItemInput.value.trim();
+        
+        if (novoItem) {
+          try {
+            if (tipoModal === 'grupo') {
+              // Obter grupos atuais
+              const grupos = db.getGrupos();
+              
+              // Verificar se já existe
+              if (grupos.includes(novoItem)) {
+                exibirMensagem('Este grupo já existe', 'warning');
+                return;
+              }
+              
+              // Adicionar novo grupo
+              grupos.push(novoItem);
+              db.salvarDadosAuxiliares('grupos', grupos);
+              
+              // Atualizar selects
+              carregarGrupos();
+              
+              // Selecionar o novo grupo
+              grupoSelect.value = novoItem;
+            } else {
+              // Obter marcas atuais
+              const marcas = db.getMarcas();
+              
+              // Verificar se já existe
+              if (marcas.includes(novoItem)) {
+                exibirMensagem('Esta marca já existe', 'warning');
+                return;
+              }
+              
+              // Adicionar nova marca
+              marcas.push(novoItem);
+              db.salvarDadosAuxiliares('marcas', marcas);
+              
+              // Atualizar selects
+              carregarMarcas();
+              
+              // Selecionar a nova marca
+              marcaSelect.value = novoItem;
+            }
+            
+            // Fechar modal
+            modalAdicionar.style.display = 'none';
+            
+            // Mensagem de sucesso
+            exibirMensagem(`${tipoModal === 'grupo' ? 'Grupo' : 'Marca'} adicionado com sucesso`, 'success');
+          } catch (erro) {
+            exibirMensagem(`Erro ao adicionar ${tipoModal}: ${erro}`, 'error');
+          }
+        }
+      }
+      
+      function exibirMensagem(mensagem, tipo) {
+        // Criar toast
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${tipo}`;
+        toast.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-${tipo === 'success' ? 'check-circle' : tipo === 'warning' ? 'exclamation-circle' : 'times-circle'}"></i>
+            <span>${mensagem}</span>
+          </div>
+        `;
+        
+        // Adicionar ao DOM
+        document.body.appendChild(toast);
+        
+        // Exibir com animação
+        setTimeout(() => {
+          toast.classList.add('show');
+        }, 10);
+        
+        // Remover após 3 segundos
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => {
+            document.body.removeChild(toast);
+          }, 300);
+        }, 3000);
+      }
     });
   </script>
 </body>
